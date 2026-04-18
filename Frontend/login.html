@@ -411,6 +411,27 @@
         setAuthStatus('Unable to register right now.', 'error');
       }
     }
+
+    // Handle URL parameters for tab and role
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      const role = params.get('role');
+      
+      if (tab === 'register') {
+        showTab('register');
+      }
+      
+      if (role) {
+        const roleOptions = document.querySelectorAll('.role-option');
+        roleOptions.forEach(opt => {
+          const label = opt.querySelector('.role-option-label').textContent.trim().toLowerCase();
+          if (label === role.toLowerCase()) {
+            selectRole(opt);
+          }
+        });
+      }
+    });
   </script>
 </body>
 </html>
