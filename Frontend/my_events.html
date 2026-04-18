@@ -38,6 +38,41 @@
         justify-content: center;
       }
     }
+
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      padding: 24px;
+      position: relative;
+    }
+    .star-rating {
+      display: flex;
+      gap: 8px;
+      font-size: 1.5rem;
+      margin: 16px 0;
+    }
+    .star {
+      cursor: pointer;
+      color: var(--text-3);
+      transition: color 0.2s;
+    }
+    .star.active {
+      color: var(--orange);
+    }
   </style>
 </head>
 <body>
@@ -76,6 +111,35 @@
       <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Registered Events</div>
       <div class="event-stack" id="myEventList">
         <p class="text-dim">Loading your events...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal-overlay" id="reviewModal">
+    <div class="modal-content">
+      <h3 style="font-family:var(--font-display);font-weight:800;color:var(--text);margin-bottom:8px;">Rate Event</h3>
+      <p class="text-xs text-dim mb-4" id="reviewEventTitle">Event Name</p>
+      
+      <div class="form-group">
+        <label class="form-label">Rating</label>
+        <div class="star-rating" id="starContainer">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Your Review</label>
+        <textarea id="reviewComment" class="form-input" rows="3" placeholder="What did you like or dislike?"></textarea>
+      </div>
+      
+      <div style="display:flex;gap:12px;margin-top:24px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="submitReview()">Submit Review</button>
+        <button class="btn btn-ghost" onclick="closeReviewModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -133,24 +197,97 @@
 
         const list = document.getElementById('myEventList');
         list.innerHTML = registrations.length
-          ? registrations.map((entry) => `
-              <div class="card event-card-row">
-                <div>
-                  <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:4px;">${escapeHtml(entry.event.title)}</div>
-                  <div class="meta">
-                    ${escapeHtml(entry.event.clubName || 'Campus Organizer')}<br/>
-                    ${escapeHtml(entry.event.date || 'TBD')} at ${escapeHtml(entry.event.time || 'TBD')}<br/>
-                    ${escapeHtml(entry.event.venue || 'Venue pending')}
+          ? registrations.map((entry) => {
+              const e = entry.event;
+              const isCompleted = e.status === 'completed';
+              
+              let actionBtn = '';
+              if (isCompleted) {
+                if (entry.isReviewed) {
+                  actionBtn = `<span class="text-xs text-dim">Rated ${entry.myReview.rating} ★</span>`;
+                } else {
+                  actionBtn = `<button class="btn btn-primary btn-xs" type="button" onclick="openReviewModal('${e.id}', '${escapeHtml(e.title)}')">Rate & Review</button>`;
+                }
+              } else {
+                actionBtn = `<button class="btn btn-ghost btn-sm" type="button" onclick="cancelRegistration('${e.id}')">Cancel Registration</button>`;
+              }
+
+              return `
+                <div class="card event-card-row" style="${isCompleted ? 'opacity:0.8; border-color:var(--border-2);' : ''}">
+                  <div>
+                    <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:4px;">
+                      ${escapeHtml(e.title)}
+                      ${isCompleted ? ' <span class="badge badge-purple" style="font-size:0.6rem;padding:1px 6px;">Completed</span>' : ''}
+                    </div>
+                    <div class="meta">
+                      ${escapeHtml(e.clubName || 'Campus Organizer')}<br/>
+                      ${escapeHtml(e.date || 'TBD')} at ${escapeHtml(e.time || 'TBD')}<br/>
+                      ${escapeHtml(e.venue || 'Venue pending')}
+                    </div>
                   </div>
+                  <div>${actionBtn}</div>
                 </div>
-                <button class="btn btn-ghost btn-sm" type="button" onclick="cancelRegistration('${entry.event.id}')">Cancel Registration</button>
-              </div>
-            `).join('')
+              `;
+            }).join('')
           : '<p class="text-dim">No registrations yet. Use Explore to join published events from organizers.</p>';
       } catch (error) {
         document.getElementById('myEventsSubtitle').textContent = error.message;
         document.getElementById('myEventList').innerHTML = '<p class="text-dim">We could not load your event registrations just now.</p>';
       }
+    }
+
+    let currentReviewEventId = null;
+    let currentRating = 0;
+
+    function openReviewModal(eventId, title) {
+      currentReviewEventId = eventId;
+      document.getElementById('reviewEventTitle').textContent = title;
+      document.getElementById('reviewModal').style.display = 'flex';
+      setRating(0);
+      document.getElementById('reviewComment').value = '';
+    }
+
+    function closeReviewModal() {
+      document.getElementById('reviewModal').style.display = 'none';
+    }
+
+    function setRating(val) {
+      currentRating = val;
+      const stars = document.querySelectorAll('.star');
+      stars.forEach(s => {
+        const starVal = parseInt(s.getAttribute('data-value'));
+        s.classList.toggle('active', starVal <= val);
+      });
+    }
+
+    // Set up star click listeners
+    document.querySelectorAll('.star').forEach(s => {
+      s.addEventListener('click', () => {
+        setRating(parseInt(s.getAttribute('data-value')));
+      });
+    });
+
+    async function submitReview() {
+      if (currentRating === 0) {
+        showToast('Please select a rating', 'error');
+        return;
+      }
+      
+      const comment = document.getElementById('reviewComment').value.trim();
+      const response = await OffGridAuth.authorizedFetch(`/api/student/events/${currentReviewEventId}/reviews`, {
+        method: 'POST',
+        body: JSON.stringify({ rating: currentRating, comment })
+      });
+      
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(data.error || 'Failed to submit review', 'error');
+        return;
+      }
+      
+      showToast('Thank you for your feedback!', 'success');
+      closeReviewModal();
+      loadMyEvents();
     }
 
     loadMyEvents();

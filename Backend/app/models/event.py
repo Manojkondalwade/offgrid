@@ -14,7 +14,7 @@ class Event(db.Model):
     venue        = db.Column(db.String(150), default='')
     capacity     = db.Column(db.Integer, default=100)
     status       = db.Column(db.String(20), default='draft')
-    # status: 'draft' | 'published' | 'poll_active' | 'cancelled'
+    # status: 'draft' | 'published' | 'poll_active' | 'cancelled' | 'completed'
     tags         = db.Column(db.Text, default='')   # comma-separated
     organizer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     club_name    = db.Column(db.String(100), default='')

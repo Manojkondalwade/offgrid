@@ -144,6 +144,24 @@ def delete_event(event_id):
     return jsonify({'message': 'Event deleted'})
 
 
+# ── POST mark event as completed ──────────────────────────────────────
+@organizer_bp.route('/events/<int:event_id>/complete', methods=['POST'])
+@jwt_required()
+def complete_event(event_id):
+    user_id = int(get_jwt_identity())
+    event   = Event.query.get_or_404(event_id)
+
+    if event.organizer_id != user_id:
+        return jsonify({'error': 'Forbidden'}), 403
+
+    if event.status != 'published':
+        return jsonify({'error': 'Only published events can be marked as completed'}), 400
+
+    event.status = 'completed'
+    db.session.commit()
+    return jsonify({'message': 'Event marked as completed', 'event': event.to_dict()})
+
+
 # ── GET proposals for organizer's events ────────────────────────────
 @organizer_bp.route('/proposals', methods=['GET'])
 @jwt_required()

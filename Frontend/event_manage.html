@@ -6,6 +6,9 @@
   <title>Manage Events - OffGrid</title>
   <link rel="stylesheet" href="css/main.css"/>
   <link rel="stylesheet" href="css/dashboard.css"/>
+  <style>
+    .badge-completed { background: var(--text-3); color: white; }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -36,7 +39,7 @@
     <div class="grid-4" style="margin-bottom:24px;gap:14px;" id="statsRow">
       <div class="card" style="padding:16px;text-align:center;"><div id="statAll" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--text);">0</div><div class="text-xs text-dim mt-2">All</div></div>
       <div class="card" style="padding:16px;text-align:center;"><div id="statPublished" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--green);">0</div><div class="text-xs text-dim mt-2">Published</div></div>
-      <div class="card" style="padding:16px;text-align:center;"><div id="statPoll" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--orange);">0</div><div class="text-xs text-dim mt-2">Poll Active</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="statCompleted" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--text-3);">0</div><div class="text-xs text-dim mt-2">Completed</div></div>
       <div class="card" style="padding:16px;text-align:center;"><div id="statDraft" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent-2);">0</div><div class="text-xs text-dim mt-2">Drafts</div></div>
     </div>
 
@@ -60,8 +63,8 @@
 
       document.getElementById('subtitle').textContent = `${events.length} organizer event${events.length === 1 ? '' : 's'} available.`;
       document.getElementById('statAll').textContent = events.length;
-      document.getElementById('statPublished').textContent = events.filter((e) => e.status === 'published').length;
-      document.getElementById('statPoll').textContent = events.filter((e) => e.status === 'poll_active').length;
+      document.getElementById('statPublished').textContent = events.filter((e) => e.status === 'published' || e.status === 'poll_active').length;
+      document.getElementById('statCompleted').textContent = events.filter((e) => e.status === 'completed').length;
       document.getElementById('statDraft').textContent = events.filter((e) => e.status === 'draft').length;
 
       if (!events.length) {
@@ -72,15 +75,40 @@
       document.getElementById('eventsList').innerHTML = events.map((event) => `
         <div class="card" style="margin-top:12px;background:var(--bg-2);">
           <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
-            <div>
+            <div style="flex:1;">
               <div style="font-family:var(--font-display);font-weight:700;color:var(--text);">${event.emoji || '🗓️'} ${event.title}</div>
               <div class="text-xs text-dim mt-2">${event.date} · ${event.time} · ${event.venue || 'Venue TBD'}</div>
               <div class="text-xs text-dim mt-2">${event.description || 'No description yet.'}</div>
+              
+              ${event.status === 'published' ? `
+                <div style="margin-top:16px;">
+                  <button class="btn btn-secondary btn-xs" onclick="markCompleted(${event.id})">Mark as Completed</button>
+                </div>
+              ` : ''}
             </div>
-            <span class="badge badge-${event.status === 'published' ? 'green' : event.status === 'poll_active' ? 'orange' : 'purple'}">${event.status}</span>
+            <span class="badge badge-${event.status === 'published' ? 'green' : event.status === 'poll_active' ? 'orange' : event.status === 'completed' ? 'completed' : 'purple'}">${event.status}</span>
           </div>
         </div>
       `).join('');
+    }
+
+    async function markCompleted(eventId) {
+      if (!confirm('Are you sure you want to mark this event as completed? This will allow students to leave reviews and ratings.')) return;
+      
+      try {
+        const res = await OffGridAuth.authorizedFetch(`/api/organizer/events/${eventId}/complete`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Failed to complete event');
+          return;
+        }
+        loadEvents();
+      } catch (err) {
+        console.error(err);
+        alert('An error occurred');
+      }
     }
 
     loadEvents();

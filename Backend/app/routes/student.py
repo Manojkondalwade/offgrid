@@ -47,6 +47,10 @@ def my_registrations():
     for r in regs:
         d = r.to_dict()
         d['event'] = r.event.to_dict() if r.event else {}
+        # Check if user already reviewed this event
+        existing_review = Review.query.filter_by(user_id=user_id, event_id=r.event_id).first()
+        d['isReviewed'] = existing_review is not None
+        d['myReview'] = existing_review.to_dict() if existing_review else None
         result.append(d)
     return jsonify(result)
 
@@ -139,3 +143,41 @@ def cast_vote(poll_id):
     db.session.commit()
 
     return jsonify({'message': 'Vote recorded!', 'poll': poll.to_dict()}), 201
+
+
+# ── POST submit event review ─────────────────────────────────────────
+@student_bp.route('/events/<int:event_id>/reviews', methods=['POST'])
+@jwt_required()
+def submit_review(event_id):
+    user_id = int(get_jwt_identity())
+    data    = request.get_json()
+    rating  = data.get('rating')
+    comment = data.get('comment', '')
+
+    if not rating or not (1 <= int(rating) <= 5):
+        return jsonify({'error': 'A rating between 1 and 5 is required'}), 400
+
+    # Ensure user was registered for this event
+    reg = Registration.query.filter_by(user_id=user_id, event_id=event_id).first()
+    if not reg:
+        return jsonify({'error': 'You must be registered for this event to leave a review'}), 403
+
+    event = Event.query.get_or_404(event_id)
+    if event.status != 'completed':
+        return jsonify({'error': 'Reviews can only be submitted for completed events'}), 400
+
+    # Check for existing review
+    existing = Review.query.filter_by(user_id=user_id, event_id=event_id).first()
+    if existing:
+        return jsonify({'error': 'You have already reviewed this event'}), 409
+
+    review = Review(
+        user_id=user_id,
+        event_id=event_id,
+        rating=int(rating),
+        comment=comment
+    )
+    db.session.add(review)
+    db.session.commit()
+
+    return jsonify({'message': 'Review submitted successfully!', 'review': review.to_dict()}), 201
