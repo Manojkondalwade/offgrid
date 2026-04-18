@@ -65,13 +65,17 @@
       const events = await eventsRes.json();
       const proposals = await proposalsRes.json();
       const liveEvents = events.filter((event) => ['published', 'poll_active'].includes(event.status));
-      document.getElementById('sponsorConnectSubtitle').textContent = `${liveEvents.length} live event${liveEvents.length === 1 ? '' : 's'} and ${proposals.length} sponsor proposal${proposals.length === 1 ? '' : 's'} in your pipeline.`;
+      const activeProposals = proposals.filter((p) => ['pending', 'discussing'].includes(p.status));
+      
+      document.getElementById('sponsorConnectSubtitle').textContent = `${liveEvents.length} live event${liveEvents.length === 1 ? '' : 's'} and ${activeProposals.length} active proposal${activeProposals.length === 1 ? '' : 's'} requiring attention.`;
+      
       document.getElementById('sponsorEventList').innerHTML = liveEvents.length
         ? liveEvents.map((event) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(event.title)}<br/><span class="text-xs text-dim">${escapeHtml(event.status)} • ${escapeHtml(String(event.registered || 0))} registrations</span></div>`).join('')
         : '<p class="text-dim">Publish an event to open it up for sponsorship conversations.</p>';
-      document.getElementById('incomingProposalList').innerHTML = proposals.length
-        ? proposals.map((proposal) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(proposal.sponsorName)} for ${escapeHtml(proposal.eventTitle)}<br/><span class="text-xs text-dim">${escapeHtml(proposal.amount || 'No amount')} • ${escapeHtml(proposal.status)}</span></div>`).join('')
-        : '<p class="text-dim">No incoming proposals yet. Sponsors will appear here once they respond to your live events.</p>';
+      
+      document.getElementById('incomingProposalList').innerHTML = activeProposals.length
+        ? activeProposals.map((proposal) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(proposal.sponsorName)} for ${escapeHtml(proposal.eventTitle)}<br/><span class="text-xs text-dim">${escapeHtml(proposal.amount || 'No amount')} • ${escapeHtml(proposal.status)}</span></div>`).join('')
+        : '<p class="text-dim">No pending proposals yet. Sponsors will appear here once they respond to your live events.</p>';
     }
 
     loadSponsorConnect();

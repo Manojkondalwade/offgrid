@@ -35,6 +35,16 @@
     <div id="proposalList" class="grid-2">
       <div class="card"><p class="text-dim">Loading proposals...</p></div>
     </div>
+
+    <div style="margin-top:48px; border-top:1px solid var(--border); padding-top:24px;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleHistory()" type="button" id="historyToggleBtn">
+        Show Processed History
+      </button>
+      <div id="historySection" style="display:none; margin-top:20px;">
+        <h3 style="font-family:var(--font-display); font-weight:700; color:var(--text-2); margin-bottom:16px; font-size:1.1rem;">History</h3>
+        <div id="proposalHistoryList" class="grid-2" style="opacity:0.8;"></div>
+      </div>
+    </div>
   </div>
 
   <script src="js/auth.js"></script>
@@ -64,42 +74,66 @@
       loadProposals();
     }
 
+    function toggleHistory() {
+      const section = document.getElementById('historySection');
+      const btn = document.getElementById('historyToggleBtn');
+      const isHidden = section.style.display === 'none';
+      section.style.display = isHidden ? 'block' : 'none';
+      btn.textContent = isHidden ? 'Hide Processed History' : 'Show Processed History';
+    }
+
+    function buildProposalCard(proposal) {
+      const isActionable = proposal.status === 'pending' || proposal.status === 'discussing';
+      return `
+        <div class="card">
+          <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:6px;">${escapeHtml(proposal.sponsorName)}</div>
+          <div class="text-dim" style="line-height:1.6;margin-bottom:12px;">
+            Event: ${escapeHtml(proposal.eventTitle)}<br/>
+            Amount: ${escapeHtml(proposal.amount || 'Not specified')}<br/>
+            Status: ${escapeHtml(proposal.status)}
+          </div>
+          <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(proposal.message || 'No message provided.')}</p>
+          ${isActionable ? `
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'accepted')">Accept</button>
+            <button class="btn btn-ghost btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'discussing')">Discuss</button>
+            <button class="btn btn-danger btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'rejected')">Reject</button>
+          </div>
+          ` : `
+          <div style="margin-top:12px;font-weight:600;color: ${proposal.status === 'accepted' ? 'var(--accent)' : 'var(--danger)'};">
+            Proposal ${escapeHtml(proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1))}
+          </div>
+          `}
+        </div>
+      `;
+    }
+
     async function loadProposals() {
       if (!OffGridAuth.requireRole('organizer')) return;
       const response = await OffGridAuth.authorizedFetch('/api/organizer/proposals');
       const proposalList = document.getElementById('proposalList');
+      const historyList = document.getElementById('proposalHistoryList');
+      
       if (!response.ok) {
         document.getElementById('proposalSubtitle').textContent = 'Unable to load proposals right now.';
         return;
       }
+      
       const proposals = await response.json();
-      document.getElementById('proposalSubtitle').textContent = proposals.length
-        ? `${proposals.length} live proposal${proposals.length === 1 ? '' : 's'} across your events.`
-        : 'No sponsor proposals yet. Published events will start receiving proposals here.';
-      proposalList.innerHTML = proposals.length
-        ? proposals.map((proposal) => `
-            <div class="card">
-              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:6px;">${escapeHtml(proposal.sponsorName)}</div>
-              <div class="text-dim" style="line-height:1.6;margin-bottom:12px;">
-                Event: ${escapeHtml(proposal.eventTitle)}<br/>
-                Amount: ${escapeHtml(proposal.amount || 'Not specified')}<br/>
-                Status: ${escapeHtml(proposal.status)}
-              </div>
-              <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(proposal.message || 'No message provided.')}</p>
-              ${(proposal.status === 'pending' || proposal.status === 'discussing') ? `
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'accepted')">Accept</button>
-                <button class="btn btn-ghost btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'discussing')">Discuss</button>
-                <button class="btn btn-danger btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'rejected')">Reject</button>
-              </div>
-              ` : `
-              <div style="margin-top:12px;font-weight:600;color: ${proposal.status === 'accepted' ? 'var(--accent)' : 'var(--danger)'};">
-                Proposal ${escapeHtml(proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1))}
-              </div>
-              `}
-            </div>
-          `).join('')
-        : '<div class="card"><p class="text-dim">No proposals yet. Sponsor interest will appear here automatically.</p></div>';
+      const active = proposals.filter(p => p.status === 'pending' || p.status === 'discussing');
+      const processed = proposals.filter(p => p.status === 'accepted' || p.status === 'rejected');
+
+      document.getElementById('proposalSubtitle').textContent = active.length
+        ? `${active.length} active proposal${active.length === 1 ? '' : 's'} requiring attention.`
+        : 'No pending proposals in your inbox.';
+      
+      proposalList.innerHTML = active.length
+        ? active.map(buildProposalCard).join('')
+        : '<div class="card"><p class="text-dim">No pending proposals yet. New sponsor interest will appear here.</p></div>';
+
+      historyList.innerHTML = processed.length
+        ? processed.map(buildProposalCard).join('')
+        : '<p class="text-dim" style="font-size:0.875rem;">No processed proposals in your history yet.</p>';
     }
 
     loadProposals();
