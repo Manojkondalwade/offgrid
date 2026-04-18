@@ -397,6 +397,7 @@
           return;
         }
         OffGridAuth.setSession(data.token, data.user);
+        sessionStorage.setItem('isNewUser', 'true');
         setAuthStatus('Account created successfully. Redirecting...', 'success');
         const roleDest = {
           organizer: 'dashboard.html',

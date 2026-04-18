@@ -73,17 +73,27 @@
         ? `${polls.length} active poll${polls.length === 1 ? '' : 's'} available now.`
         : 'There are no active time polls right now.';
       pollList.innerHTML = polls.length
-        ? polls.map((poll) => `
-            <div class="card">
-              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:8px;">${escapeHtml(poll.title)}</div>
-              <p class="text-dim" style="margin-bottom:14px;">${escapeHtml(poll.question)}<br/>Total votes: ${escapeHtml(String(poll.totalVotes || 0))}</p>
+        ? polls.map((poll) => {
+            const isEnded = poll.endsAt && new Date(poll.endsAt) < new Date();
+            const formatDeadline = poll.endsAt ? new Date(poll.endsAt).toLocaleString('en-IN', {day:'numeric', month:'short', hour:'numeric', minute:'2-digit'}) : '';
+            return `
+            <div class="card" ${isEnded ? 'style="opacity:0.8;"' : ''}>
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:8px;">
+                ${escapeHtml(poll.title)}
+                ${isEnded ? '<span style="font-size:0.7rem;background:var(--danger);color:#fff;padding:2px 6px;border-radius:4px;margin-left:8px;vertical-align:middle;">Ended</span>' : ''}
+              </div>
+              <p class="text-dim" style="margin-bottom:14px;">
+                ${escapeHtml(poll.question)}<br/>
+                Total votes: ${escapeHtml(String(poll.totalVotes || 0))}
+                ${poll.endsAt && !isEnded ? `<br/><span style="color:var(--accent);">Deadline: ${escapeHtml(formatDeadline)}</span>` : ''}
+              </p>
               <div style="display:grid;gap:10px;">
                 ${poll.options.map((option) => `
                   <button
                     class="btn ${poll.myVoteOptionId === option.id ? 'btn-secondary' : 'btn-ghost'}"
                     type="button"
-                    ${poll.myVoteOptionId ? 'disabled' : ''}
-                    onclick="castVote(${poll.id}, ${option.id})"
+                    ${(poll.myVoteOptionId || isEnded) ? 'disabled' : ''}
+                    onclick="castVote('${poll.id}', '${option.id}')"
                     style="justify-content:space-between;"
                   >
                     <span>${escapeHtml(option.label)}</span>
@@ -92,7 +102,7 @@
                 `).join('')}
               </div>
             </div>
-          `).join('')
+          `}).join('')
         : '<div class="card"><p class="text-dim">No active polls at the moment. New organizer time polls will appear here automatically.</p></div>';
     }
 

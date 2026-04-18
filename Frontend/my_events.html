@@ -143,7 +143,7 @@
                     ${escapeHtml(entry.event.venue || 'Venue pending')}
                   </div>
                 </div>
-                <button class="btn btn-ghost btn-sm" type="button" onclick="cancelRegistration(${entry.event.id})">Cancel Registration</button>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="cancelRegistration('${entry.event.id}')">Cancel Registration</button>
               </div>
             `).join('')
           : '<p class="text-dim">No registrations yet. Use Explore to join published events from organizers.</p>';

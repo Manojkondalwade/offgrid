@@ -118,6 +118,15 @@ def cast_vote(poll_id):
     if poll.status != 'active':
         return jsonify({'error': 'Poll is closed'}), 400
 
+    if poll.ends_at:
+        try:
+            from datetime import datetime
+            ends_dt = datetime.fromisoformat(poll.ends_at)
+            if datetime.now() > ends_dt:
+                return jsonify({'error': 'Poll deadline has passed'}), 400
+        except ValueError:
+            pass
+
     existing = Vote.query.filter_by(user_id=user_id, poll_id=poll_id).first()
     if existing:
         return jsonify({'error': 'Already voted in this poll'}), 409

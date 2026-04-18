@@ -79,7 +79,9 @@
                 Perks: ${escapeHtml(proposal.perks || 'Not specified')}
               </div>
               <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(proposal.message || 'No message provided.')}</p>
-              <button class="btn btn-danger btn-sm" type="button" onclick="withdrawProposal(${proposal.id})">Withdraw</button>
+              ${(proposal.status === 'pending' || proposal.status === 'discussing') ? `
+              <button class="btn btn-danger btn-sm" type="button" onclick="withdrawProposal('${proposal.id}')">Withdraw</button>
+              ` : ''}
             </div>
           `).join('')
         : '<div class="card"><p class="text-dim">No proposals yet. Open Sponsor Events to send one.</p></div>';

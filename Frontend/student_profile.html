@@ -37,8 +37,26 @@
           <input id="profileName" class="form-input" placeholder="Full name"/>
           <input id="profileEmail" class="form-input" placeholder="Email" readonly/>
           <input id="profileCollege" class="form-input" placeholder="College"/>
+          <select id="profileDegree" class="form-input">
+            <option value="" disabled selected hidden>Select Degree</option>
+            <option value="B.Tech">B.Tech</option>
+            <option value="B.E.">B.E.</option>
+            <option value="M.Tech">M.Tech</option>
+            <option value="M.E.">M.E.</option>
+            <option value="B.Sc">B.Sc</option>
+            <option value="M.Sc">M.Sc</option>
+            <option value="BCA">BCA</option>
+            <option value="MCA">MCA</option>
+            <option value="Other">Other</option>
+          </select>
           <input id="profileBranch" class="form-input" placeholder="Branch"/>
-          <input id="profileYear" class="form-input" type="number" placeholder="Year"/>
+          <select id="profileYear" class="form-input">
+            <option value="" disabled selected hidden>Select Year (1-4)</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
           <input id="profilePassword" class="form-input" type="password" placeholder="New password (optional)"/>
           <button class="btn btn-primary" type="button" onclick="saveProfile()">Save Profile</button>
         </div>
@@ -57,6 +75,7 @@
       document.getElementById('profileName').value = user.name || '';
       document.getElementById('profileEmail').value = user.email || '';
       document.getElementById('profileCollege').value = user.college || '';
+      document.getElementById('profileDegree').value = user.degree || '';
       document.getElementById('profileBranch').value = user.branch || '';
       document.getElementById('profileYear').value = user.year || '';
       document.getElementById('profileInterests').value = (user.interests || []).join(', ');
@@ -80,6 +99,7 @@
       const payload = {
         name: document.getElementById('profileName').value.trim(),
         college: document.getElementById('profileCollege').value.trim(),
+        degree: document.getElementById('profileDegree').value || '',
         branch: document.getElementById('profileBranch').value.trim(),
         year: document.getElementById('profileYear').value ? Number(document.getElementById('profileYear').value) : null,
         interests: document.getElementById('profileInterests').value.split(',').map((item) => item.trim()).filter(Boolean),

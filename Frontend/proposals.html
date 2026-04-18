@@ -86,11 +86,17 @@
                 Status: ${escapeHtml(proposal.status)}
               </div>
               <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(proposal.message || 'No message provided.')}</p>
+              ${(proposal.status === 'pending' || proposal.status === 'discussing') ? `
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button class="btn btn-primary btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'accepted')">Accept</button>
-                <button class="btn btn-ghost btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'discussing')">Discuss</button>
-                <button class="btn btn-danger btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'rejected')">Reject</button>
+                <button class="btn btn-primary btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'accepted')">Accept</button>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'discussing')">Discuss</button>
+                <button class="btn btn-danger btn-sm" type="button" onclick="updateProposal('${proposal.id}', 'rejected')">Reject</button>
               </div>
+              ` : `
+              <div style="margin-top:12px;font-weight:600;color: ${proposal.status === 'accepted' ? 'var(--accent)' : 'var(--danger)'};">
+                Proposal ${escapeHtml(proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1))}
+              </div>
+              `}
             </div>
           `).join('')
         : '<div class="card"><p class="text-dim">No proposals yet. Sponsor interest will appear here automatically.</p></div>';

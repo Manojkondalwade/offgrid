@@ -21,6 +21,7 @@ def register():
         name      = data['name'],
         email     = data['email'].lower(),
         role      = data['role'],
+        degree    = data.get('degree', ''),
         branch    = data.get('branch', ''),
         year      = data.get('year'),
         college   = data.get('college', ''),
@@ -66,6 +67,7 @@ def update_me():
     data    = request.get_json()
 
     user.name      = data.get('name', user.name)
+    user.degree    = data.get('degree', user.degree)
     user.branch    = data.get('branch', user.branch)
     user.year      = data.get('year', user.year)
     user.college   = data.get('college', user.college)

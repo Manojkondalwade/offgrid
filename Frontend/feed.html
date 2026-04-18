@@ -271,7 +271,7 @@
                 <a href="event_detail.html?id=${event.id}" class="text-sm font-semibold text-text-2 hover:text-white transition-colors px-2">Details</a>
                 ${isRegistered
                   ? '<span class="px-4 py-2 rounded-lg bg-surface text-text-3 font-semibold text-sm border border-white/5 cursor-not-allowed">Registered</span>'
-                  : `<button class="px-4 py-2 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-2 transition-all shadow-lg hover:shadow-accent/30" type="button" onclick="registerForEvent(${event.id})">Register</button>`}
+                  : `<button class="px-4 py-2 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-2 transition-all shadow-lg hover:shadow-accent/30" type="button" onclick="registerForEvent('${event.id}')">Register</button>`}
               </div>
             </div>
           </div>

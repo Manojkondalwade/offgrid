@@ -176,7 +176,15 @@
 
       const user = OffGridAuth.getUser() || {};
       const firstName = (user.name || 'Student').split(' ')[0];
-      document.getElementById('welcomeTitle').textContent = `Welcome back, ${firstName}`;
+      
+      const isNew = sessionStorage.getItem('isNewUser');
+      if (isNew) {
+        document.getElementById('welcomeTitle').textContent = `Welcome, ${firstName}`;
+        sessionStorage.removeItem('isNewUser'); // clear so it says welcome back next time
+      } else {
+        document.getElementById('welcomeTitle').textContent = `Welcome back, ${firstName}`;
+      }
+      
       document.getElementById('studentAvatar').textContent = (user.name || 'ST').slice(0, 2).toUpperCase();
 
       try {

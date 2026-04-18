@@ -11,6 +11,7 @@ class User(db.Model):
     password   = db.Column(db.String(256), nullable=False)
     role       = db.Column(db.String(20), nullable=False, default='student')
     # role: 'student' | 'organizer' | 'sponsor'
+    degree     = db.Column(db.String(50))           # for students
     branch     = db.Column(db.String(50))          # for students
     year       = db.Column(db.Integer)              # for students
     college    = db.Column(db.String(150))
@@ -34,6 +35,7 @@ class User(db.Model):
             'name':      self.name,
             'email':     self.email,
             'role':      self.role,
+            'degree':    self.degree,
             'branch':    self.branch,
             'year':      self.year,
             'college':   self.college,

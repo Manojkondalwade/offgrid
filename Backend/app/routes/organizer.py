@@ -58,6 +58,10 @@ def create_event():
     if not data.get('title'):
         return jsonify({'error': 'title is required'}), 400
 
+    capacity = data.get('capacity', 100)
+    if capacity is not None and int(capacity) < 1:
+        return jsonify({'error': 'Max participants must be at least 1'}), 400
+
     event = Event(
         title        = data['title'],
         description  = data.get('description', ''),
@@ -66,7 +70,7 @@ def create_event():
         date         = data.get('date', 'TBD'),
         time         = data.get('time', 'TBD'),
         venue        = data.get('venue', ''),
-        capacity     = data.get('capacity', 100),
+        capacity     = max(1, int(capacity)) if capacity is not None else 100,
         status       = data.get('status', 'draft'),
         tags         = ','.join(data.get('tags', [])),
         organizer_id = user_id,
@@ -105,6 +109,10 @@ def update_event(event_id):
         return jsonify({'error': 'Forbidden'}), 403
 
     data = request.get_json()
+    new_capacity = data.get('capacity', event.capacity)
+    if new_capacity is not None and int(new_capacity) < 1:
+        return jsonify({'error': 'Max participants must be at least 1'}), 400
+
     event.title       = data.get('title', event.title)
     event.description = data.get('description', event.description)
     event.category    = data.get('category', event.category)
@@ -112,7 +120,7 @@ def update_event(event_id):
     event.date        = data.get('date', event.date)
     event.time        = data.get('time', event.time)
     event.venue       = data.get('venue', event.venue)
-    event.capacity    = data.get('capacity', event.capacity)
+    event.capacity    = max(1, int(new_capacity)) if new_capacity is not None else event.capacity
     event.status      = data.get('status', event.status)
     event.tags        = ','.join(data.get('tags', event.tags.split(',') if event.tags else []))
     event.club_name   = data.get('clubName', event.club_name)

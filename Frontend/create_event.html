@@ -115,6 +115,10 @@
             </div>
 
             <div id="pollSlots" style="display:none;" aria-hidden="true">
+              <div class="form-group" style="background:var(--bg-3); padding:14px; border-radius:8px; border:1px dashed var(--border); margin-bottom:16px;">
+                <label class="form-label">Poll Deadline / Auto-End Time (Optional)</label>
+                <input type="datetime-local" class="form-input" id="pollEndsAt" style="max-width:260px;" />
+              </div>
               <label class="form-label" style="margin-bottom:10px;display:block;">Time Slot Options for Voting</label>
               <div id="slotList"></div>
               <button type="button" class="btn btn-secondary btn-sm mt-2" id="addSlotBtn" onclick="addSlot()">+ Add Slot</button>
@@ -127,7 +131,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Max Participants</label>
-                <input type="number" class="form-input" placeholder="Leave blank for unlimited" id="evtMax"/>
+                <input type="number" class="form-input" placeholder="Leave blank for unlimited" id="evtMax" min="1"/>
               </div>
             </div>
           </div>
@@ -138,14 +142,13 @@
           <div class="grid-2" style="gap:14px;">
             <div class="form-group">
               <label class="form-label">Registration Fee</label>
-              <input type="number" class="form-input" placeholder="0 for free" value="0" id="evtFee"/>
+              <input type="number" class="form-input" placeholder="0 for free" value="0" id="evtFee" min="0"/>
             </div>
             <div class="form-group">
               <label class="form-label">Team Size</label>
               <select class="form-select" id="evtTeamSize">
                 <option>Individual</option>
-                <option selected>2-4 members</option>
-                <option>Any</option>
+                <option selected>2-5 members</option>
               </select>
             </div>
           </div>
@@ -276,6 +279,7 @@
       const venue = document.getElementById('evtVenue').value.trim();
       const capacityRaw = document.getElementById('evtMax').value;
       const pollingEnabled = document.getElementById('enablePoll').checked;
+      const pollEndsAt = document.getElementById('pollEndsAt')?.value || '';
 
       if (!title || !category || !description) {
         showToast('Please fill the required fields first.', 'error');
@@ -300,7 +304,8 @@
         status,
         tags: getTags(),
         clubName: user?.name || 'Organizer',
-        pollOptions
+        pollOptions,
+        pollEndsAt
       };
 
       const publishBtn = document.getElementById('publishBtn');

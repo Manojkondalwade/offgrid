@@ -29,20 +29,56 @@
 </head>
 <body>
 <h1>OffGrid Test Report</h1>
-<p class="subtitle">Generated 17/4/2026, 9:55:57 pm</p>
+<p class="subtitle">Generated 18/4/2026, 10:07:22 am</p>
 
 <div class="creds">
   <strong>Demo credentials used:</strong>
-  email: <code>demo@example.com</code>  |  password: <code>demo123</code>  |  registerEmail: <code>qa+1776443098925@example.com</code>  |  username: <code>qa_user_1776443098925</code>
+  email: <code>demo@example.com</code>  |  password: <code>demo123</code>  |  registerEmail: <code>qa+1776487034105@example.com</code>  |  username: <code>qa_user_1776487034105</code>
 </div>
 
 <div class="stats">
-  <div class="stat"><div class="stat-num">13</div><div class="stat-label">Pages tested</div></div>
-  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Pages with issues</div></div>
-  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Total issues found</div></div>
-  <div class="stat"><div class="stat-num">13</div><div class="stat-label">Clean pages</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Pages tested</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Pages with issues</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Total issues found</div></div>
+  <div class="stat"><div class="stat-num">0</div><div class="stat-label">Clean pages</div></div>
 </div>
 
-<div class="page ok"><span class="url">http://localhost:5000/</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/dashboard.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/sponsor_dashboard.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/index.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/explore.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/feed.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/login.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/student_dashboard.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/my_events.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/vote.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/student_profile.html</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/event_detail.html?id=2</span> <span class="badge ok-badge">Clean</span></div><div class="page ok"><span class="url">http://localhost:5000/event_detail.html?id=1</span> <span class="badge ok-badge">Clean</span></div>
+<div class="page"><span class="url">http://localhost:5000/</span><div class="issues">
+      <div class="issue">
+        <div class="issue-header">
+          <span class="badge" style="background:#e74c3c">CRITICAL</span>
+          <strong>Page Load Failed</strong>
+          
+        </div>
+        <p class="detail">page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/
+Call log:
+[2m  - navigating to "http://localhost:5000/", waiting until "networkidle"[22m
+</p>
+        <div class="fix"><strong>Fix:</strong> The page at http://localhost:5000/ failed to load. Check your server is running and the route exists.</div>
+      </div></div></div><div class="page"><span class="url">http://localhost:5000/dashboard.html</span><div class="issues">
+      <div class="issue">
+        <div class="issue-header">
+          <span class="badge" style="background:#e74c3c">CRITICAL</span>
+          <strong>Page Load Failed</strong>
+          
+        </div>
+        <p class="detail">page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/dashboard.html
+Call log:
+[2m  - navigating to "http://localhost:5000/dashboard.html", waiting until "networkidle"[22m
+</p>
+        <div class="fix"><strong>Fix:</strong> The page at http://localhost:5000/dashboard.html failed to load. Check your server is running and the route exists.</div>
+      </div></div></div><div class="page"><span class="url">http://localhost:5000/sponsor_dashboard.html</span><div class="issues">
+      <div class="issue">
+        <div class="issue-header">
+          <span class="badge" style="background:#e74c3c">CRITICAL</span>
+          <strong>Page Load Failed</strong>
+          
+        </div>
+        <p class="detail">page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/sponsor_dashboard.html
+Call log:
+[2m  - navigating to "http://localhost:5000/sponsor_dashboard.html", waiting until "networkidle"[22m
+</p>
+        <div class="fix"><strong>Fix:</strong> The page at http://localhost:5000/sponsor_dashboard.html failed to load. Check your server is running and the route exists.</div>
+      </div></div></div>
 </body>
 </html>
