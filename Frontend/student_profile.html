@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Profile - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html">My Events</a></li>
+      <li><a href="vote.html">Vote</a></li>
+      <li><a href="student_profile.html" class="active">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div class="avatar" id="studentAvatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">My Profile</h1>
+        <p class="page-subtitle text-muted" id="studentProfileSubtitle">Loading your profile...</p>
+      </div>
+      <button class="btn btn-danger btn-sm" type="button" onclick="OffGridAuth.signOut()">Sign Out</button>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Profile Details</div>
+        <div style="display:grid;gap:12px;">
+          <input id="profileName" class="form-input" placeholder="Full name"/>
+          <input id="profileEmail" class="form-input" placeholder="Email" readonly/>
+          <input id="profileCollege" class="form-input" placeholder="College"/>
+          <input id="profileBranch" class="form-input" placeholder="Branch"/>
+          <input id="profileYear" class="form-input" type="number" placeholder="Year"/>
+          <input id="profilePassword" class="form-input" type="password" placeholder="New password (optional)"/>
+          <button class="btn btn-primary" type="button" onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Interests</div>
+        <textarea id="profileInterests" class="form-input" rows="8" placeholder="Comma-separated interests"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function populateForm(user) {
+      document.getElementById('profileName').value = user.name || '';
+      document.getElementById('profileEmail').value = user.email || '';
+      document.getElementById('profileCollege').value = user.college || '';
+      document.getElementById('profileBranch').value = user.branch || '';
+      document.getElementById('profileYear').value = user.year || '';
+      document.getElementById('profileInterests').value = (user.interests || []).join(', ');
+      document.getElementById('studentAvatar').textContent = (user.name || 'ST').slice(0, 2).toUpperCase();
+      document.getElementById('studentProfileSubtitle').textContent = `Live profile for ${user.name || 'student'}.`;
+    }
+
+    async function loadProfile() {
+      if (!OffGridAuth.requireRole('student')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/auth/me');
+      if (!response.ok) {
+        document.getElementById('studentProfileSubtitle').textContent = 'Unable to load your profile right now.';
+        return;
+      }
+      const user = await response.json();
+      OffGridAuth.setSession(OffGridAuth.getToken(), user);
+      populateForm(user);
+    }
+
+    async function saveProfile() {
+      const payload = {
+        name: document.getElementById('profileName').value.trim(),
+        college: document.getElementById('profileCollege').value.trim(),
+        branch: document.getElementById('profileBranch').value.trim(),
+        year: document.getElementById('profileYear').value ? Number(document.getElementById('profileYear').value) : null,
+        interests: document.getElementById('profileInterests').value.split(',').map((item) => item.trim()).filter(Boolean),
+        password: document.getElementById('profilePassword').value
+      };
+      const response = await OffGridAuth.authorizedFetch('/api/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+      const user = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(user.error || 'Could not save your profile.', 'error');
+        return;
+      }
+      OffGridAuth.setSession(OffGridAuth.getToken(), user);
+      document.getElementById('profilePassword').value = '';
+      populateForm(user);
+      showToast('Profile updated successfully.', 'success');
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Time Voting - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html">My Events</a></li>
+      <li><a href="vote.html" class="active">Vote</a></li>
+      <li><a href="student_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div class="avatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Time Polling</h1>
+      <p class="page-subtitle text-muted" id="voteSubtitle">Loading active polls...</p>
+    </div>
+    <div id="pollList" class="grid-2">
+      <div class="card"><p class="text-dim">Loading polls...</p></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function castVote(pollId, optionId) {
+      const response = await OffGridAuth.authorizedFetch(`/api/student/polls/${pollId}/vote`, {
+        method: 'POST',
+        body: JSON.stringify({ optionId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(payload.error || 'Could not record your vote.', 'error');
+        return;
+      }
+      showToast(payload.message || 'Vote recorded!', 'success');
+      loadPolls();
+    }
+
+    async function loadPolls() {
+      if (!OffGridAuth.requireRole('student')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/student/polls');
+      const pollList = document.getElementById('pollList');
+      if (!response.ok) {
+        document.getElementById('voteSubtitle').textContent = 'Unable to load polls right now.';
+        pollList.innerHTML = '<div class="card"><p class="text-dim">We could not load polling data just now.</p></div>';
+        return;
+      }
+      const polls = await response.json();
+      document.getElementById('voteSubtitle').textContent = polls.length
+        ? `${polls.length} active poll${polls.length === 1 ? '' : 's'} available now.`
+        : 'There are no active time polls right now.';
+      pollList.innerHTML = polls.length
+        ? polls.map((poll) => `
+            <div class="card">
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:8px;">${escapeHtml(poll.title)}</div>
+              <p class="text-dim" style="margin-bottom:14px;">${escapeHtml(poll.question)}<br/>Total votes: ${escapeHtml(String(poll.totalVotes || 0))}</p>
+              <div style="display:grid;gap:10px;">
+                ${poll.options.map((option) => `
+                  <button
+                    class="btn ${poll.myVoteOptionId === option.id ? 'btn-secondary' : 'btn-ghost'}"
+                    type="button"
+                    ${poll.myVoteOptionId ? 'disabled' : ''}
+                    onclick="castVote(${poll.id}, ${option.id})"
+                    style="justify-content:space-between;"
+                  >
+                    <span>${escapeHtml(option.label)}</span>
+                    <span>${escapeHtml(String(option.votes || 0))} votes</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')
+        : '<div class="card"><p class="text-dim">No active polls at the moment. New organizer time polls will appear here automatically.</p></div>';
+    }
+
+    loadPolls();
+  </script>
+</body>
+</html>

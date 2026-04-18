@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sponsor Profile - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="sponsor_dashboard.html">Dashboard</a></li>
+      <li><a href="sponsor_events.html">All Events</a></li>
+      <li><a href="sponsor_proposals.html">Proposals</a></li>
+      <li><a href="sponsor_profile.html" class="active">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-orange">Sponsor</span>
+      <div class="avatar" id="sponsorAvatar" onclick="window.location='sponsor_profile.html'" style="cursor:pointer;" title="Profile">SP</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Sponsor Profile</h1>
+        <p class="page-subtitle text-muted" id="sponsorProfileSubtitle">Loading your sponsor profile...</p>
+      </div>
+      <button class="btn btn-danger btn-sm" type="button" onclick="OffGridAuth.signOut()">Sign Out</button>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Sponsor Details</div>
+        <div style="display:grid;gap:12px;">
+          <input id="profileName" class="form-input" placeholder="Company name"/>
+          <input id="profileEmail" class="form-input" placeholder="Email" readonly/>
+          <input id="profilePassword" class="form-input" type="password" placeholder="New password (optional)"/>
+          <textarea id="profileInterests" class="form-input" rows="6" placeholder="Comma-separated sponsorship interests"></textarea>
+          <button class="btn btn-primary" type="button" onclick="saveProfile()">Save Profile</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Live Snapshot</div>
+        <div id="sponsorStats"><p class="text-dim">Loading sponsor stats...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function populateForm(user) {
+      document.getElementById('profileName').value = user.name || '';
+      document.getElementById('profileEmail').value = user.email || '';
+      document.getElementById('profileInterests').value = (user.interests || []).join(', ');
+      document.getElementById('sponsorAvatar').textContent = (user.name || 'SP').slice(0, 2).toUpperCase();
+      document.getElementById('sponsorProfileSubtitle').textContent = `Live profile for ${user.name || 'sponsor'}.`;
+    }
+
+    async function loadProfile() {
+      if (!OffGridAuth.requireRole('sponsor')) return;
+      const [profileRes, dashboardRes] = await Promise.all([
+        OffGridAuth.authorizedFetch('/api/auth/me'),
+        OffGridAuth.authorizedFetch('/api/sponsor/dashboard')
+      ]);
+      if (!profileRes.ok || !dashboardRes.ok) {
+        document.getElementById('sponsorProfileSubtitle').textContent = 'Unable to load your sponsor profile.';
+        return;
+      }
+      const user = await profileRes.json();
+      const dashboard = await dashboardRes.json();
+      OffGridAuth.setSession(OffGridAuth.getToken(), user);
+      populateForm(user);
+      document.getElementById('sponsorStats').innerHTML = `
+        <div class="text-dim">Total Proposals: ${dashboard.totalProposals || 0}</div>
+        <div class="text-dim">Pending: ${dashboard.pendingCount || 0}</div>
+        <div class="text-dim">Accepted: ${dashboard.acceptedCount || 0}</div>
+        <div class="text-dim">Invested: ${dashboard.totalInvested || '₹0'}</div>
+      `;
+    }
+
+    async function saveProfile() {
+      const response = await OffGridAuth.authorizedFetch('/api/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: document.getElementById('profileName').value.trim(),
+          interests: document.getElementById('profileInterests').value.split(',').map((item) => item.trim()).filter(Boolean),
+          password: document.getElementById('profilePassword').value
+        })
+      });
+      const user = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(user.error || 'Could not save your profile.', 'error');
+        return;
+      }
+      OffGridAuth.setSession(OffGridAuth.getToken(), user);
+      document.getElementById('profilePassword').value = '';
+      populateForm(user);
+      showToast('Sponsor profile updated.', 'success');
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# auth_guard.py - Offgrid Platform

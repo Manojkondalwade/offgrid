@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Events - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .event-stack {
+      display: grid;
+      gap: 14px;
+    }
+    .event-card-row {
+      padding: 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+    }
+    .event-card-row .meta {
+      color: var(--text-2);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    @media (max-width: 720px) {
+      .event-card-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .event-card-row .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html" class="active">My Events</a></li>
+      <li><a href="vote.html">Vote</a></li>
+      <li><a href="student_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div class="avatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">My Events</h1>
+        <p class="page-subtitle text-muted" id="myEventsSubtitle">Loading your registrations...</p>
+      </div>
+      <a href="explore.html" class="btn btn-primary btn-sm">Find Events</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card" style="padding:16px;text-align:center;"><div id="upcomingCount" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--text);">0</div><div class="text-xs text-dim mt-2">Upcoming</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="registeredCount" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--green);">0</div><div class="text-xs text-dim mt-2">Registered</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="availableCount" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--orange);">0</div><div class="text-xs text-dim mt-2">Published Now</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="pollCount" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent-2);">0</div><div class="text-xs text-dim mt-2">Active Polls</div></div>
+    </div>
+
+    <div class="card">
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Registered Events</div>
+      <div class="event-stack" id="myEventList">
+        <p class="text-dim">Loading your events...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function cancelRegistration(eventId) {
+      const response = await OffGridAuth.authorizedFetch(`/api/student/registrations/${eventId}`, {
+        method: 'DELETE'
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(payload.error || 'Could not cancel this registration.', 'error');
+        return;
+      }
+      showToast(payload.message || 'Registration cancelled.', 'success');
+      loadMyEvents();
+    }
+
+    async function loadMyEvents() {
+      if (!OffGridAuth.requireRole('student')) return;
+
+      try {
+        const [registrationsRes, dashboardRes, publicEventsRes] = await Promise.all([
+          OffGridAuth.authorizedFetch('/api/student/registrations'),
+          OffGridAuth.authorizedFetch('/api/student/dashboard'),
+          fetch('/api/events')
+        ]);
+
+        if (!registrationsRes.ok || !dashboardRes.ok || !publicEventsRes.ok) {
+          throw new Error('Unable to load your events right now.');
+        }
+
+        const registrations = await registrationsRes.json();
+        const dashboard = await dashboardRes.json();
+        const publicEvents = await publicEventsRes.json();
+
+        document.getElementById('registeredCount').textContent = registrations.length;
+        document.getElementById('upcomingCount').textContent = registrations.length;
+        document.getElementById('availableCount').textContent = publicEvents.length;
+        document.getElementById('pollCount').textContent = dashboard.activePolls || 0;
+        document.getElementById('myEventsSubtitle').textContent = registrations.length
+          ? `You are registered for ${registrations.length} event${registrations.length === 1 ? '' : 's'}.`
+          : 'You have not registered yet. Published events are waiting in Explore.';
+
+        const list = document.getElementById('myEventList');
+        list.innerHTML = registrations.length
+          ? registrations.map((entry) => `
+              <div class="card event-card-row">
+                <div>
+                  <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:4px;">${escapeHtml(entry.event.title)}</div>
+                  <div class="meta">
+                    ${escapeHtml(entry.event.clubName || 'Campus Organizer')}<br/>
+                    ${escapeHtml(entry.event.date || 'TBD')} at ${escapeHtml(entry.event.time || 'TBD')}<br/>
+                    ${escapeHtml(entry.event.venue || 'Venue pending')}
+                  </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="cancelRegistration(${entry.event.id})">Cancel Registration</button>
+              </div>
+            `).join('')
+          : '<p class="text-dim">No registrations yet. Use Explore to join published events from organizers.</p>';
+      } catch (error) {
+        document.getElementById('myEventsSubtitle').textContent = error.message;
+        document.getElementById('myEventList').innerHTML = '<p class="text-dim">We could not load your event registrations just now.</p>';
+      }
+    }
+
+    loadMyEvents();
+  </script>
+  <script src="js/app.js"></script>
+</body>
+</html>

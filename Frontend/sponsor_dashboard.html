@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sponsor Dashboard - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="sponsor_dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="sponsor_events.html">All Events</a></li>
+      <li><a href="sponsor_proposals.html">Proposals</a></li>
+      <li><a href="sponsor_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-orange">Sponsor</span>
+      <div class="avatar" onclick="window.location='sponsor_profile.html'" style="cursor:pointer;" title="Profile">SP</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Sponsor Dashboard</h1>
+      <p class="page-subtitle text-muted" id="sponsorSubtitle">Loading sponsor pipeline...</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-label">Active Proposals</div><div class="stat-card-value" id="totalProp">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Pending</div><div class="stat-card-value" id="pendingProp">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Accepted</div><div class="stat-card-value" id="acceptedProp">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Invested</div><div class="stat-card-value" id="invested">₹0</div></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:20px;">
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Matching Events</div>
+        <div id="matchList"><p class="text-dim">Loading matching events...</p></div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Recent Proposals</div>
+        <div id="proposalPreview"><p class="text-dim">Loading proposal history...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function loadSponsorDashboard() {
+      if (!OffGridAuth.requireRole('sponsor')) return;
+      const [dashboardRes, discoverRes] = await Promise.all([
+        OffGridAuth.authorizedFetch('/api/sponsor/dashboard'),
+        OffGridAuth.authorizedFetch('/api/sponsor/discover')
+      ]);
+      if (!dashboardRes.ok || !discoverRes.ok) {
+        document.getElementById('sponsorSubtitle').textContent = 'Unable to load sponsor dashboard right now.';
+        return;
+      }
+      const dashboard = await dashboardRes.json();
+      const discover = await discoverRes.json();
+      document.getElementById('totalProp').textContent = dashboard.totalProposals || 0;
+      document.getElementById('pendingProp').textContent = dashboard.pendingCount || 0;
+      document.getElementById('acceptedProp').textContent = dashboard.acceptedCount || 0;
+      document.getElementById('invested').textContent = dashboard.totalInvested || '₹0';
+      document.getElementById('sponsorSubtitle').textContent = discover.length
+        ? `${discover.length} live sponsorship opportunity${discover.length === 1 ? '' : 'ies'} match your interests.`
+        : 'No matching events right now. New organizer events will appear here automatically.';
+      document.getElementById('matchList').innerHTML = discover.length
+        ? discover.slice(0, 4).map((event) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(event.title)}<br/><span class="text-xs text-dim">${escapeHtml(event.clubName || 'Campus Organizer')} • Match ${escapeHtml(String(event.matchScore || 0))}</span></div>`).join('')
+        : '<p class="text-dim">No matching events yet.</p>';
+      document.getElementById('proposalPreview').innerHTML = dashboard.proposals.length
+        ? dashboard.proposals.slice(0, 4).map((proposal) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(proposal.eventTitle)}<br/><span class="text-xs text-dim">${escapeHtml(proposal.amount || 'No amount')} • ${escapeHtml(proposal.status)}</span></div>`).join('')
+        : '<p class="text-dim">No proposals sent yet.</p>';
+    }
+
+    loadSponsorDashboard();
+  </script>
+</body>
+</html>

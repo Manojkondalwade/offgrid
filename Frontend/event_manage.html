@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Events - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="event_manage.html" class="active">Events</a></li>
+      <li><a href="sponsors.html">Sponsors</a></li>
+      <li><a href="proposals.html">Proposals</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">CD</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Manage Events</h1>
+        <p class="page-subtitle text-muted" id="subtitle">Loading organizer events...</p>
+      </div>
+      <a href="create_event.html" class="btn btn-primary">+ New Event</a>
+    </div>
+
+    <div class="grid-4" style="margin-bottom:24px;gap:14px;" id="statsRow">
+      <div class="card" style="padding:16px;text-align:center;"><div id="statAll" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--text);">0</div><div class="text-xs text-dim mt-2">All</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="statPublished" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--green);">0</div><div class="text-xs text-dim mt-2">Published</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="statPoll" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--orange);">0</div><div class="text-xs text-dim mt-2">Poll Active</div></div>
+      <div class="card" style="padding:16px;text-align:center;"><div id="statDraft" style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--accent-2);">0</div><div class="text-xs text-dim mt-2">Drafts</div></div>
+    </div>
+
+    <div class="card">
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Event List</div>
+      <div id="eventsList" class="text-dim">Loading events...</div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    OffGridAuth.requireRole('organizer');
+
+    async function loadEvents() {
+      const res = await OffGridAuth.authorizedFetch('/api/organizer/events');
+      const events = await res.json();
+      if (!res.ok) {
+        document.getElementById('eventsList').textContent = events.error || 'Unable to load organizer events.';
+        return;
+      }
+
+      document.getElementById('subtitle').textContent = `${events.length} organizer event${events.length === 1 ? '' : 's'} available.`;
+      document.getElementById('statAll').textContent = events.length;
+      document.getElementById('statPublished').textContent = events.filter((e) => e.status === 'published').length;
+      document.getElementById('statPoll').textContent = events.filter((e) => e.status === 'poll_active').length;
+      document.getElementById('statDraft').textContent = events.filter((e) => e.status === 'draft').length;
+
+      if (!events.length) {
+        document.getElementById('eventsList').textContent = 'No events yet. Create one to get started.';
+        return;
+      }
+
+      document.getElementById('eventsList').innerHTML = events.map((event) => `
+        <div class="card" style="margin-top:12px;background:var(--bg-2);">
+          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+            <div>
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);">${event.emoji || '🗓️'} ${event.title}</div>
+              <div class="text-xs text-dim mt-2">${event.date} · ${event.time} · ${event.venue || 'Venue TBD'}</div>
+              <div class="text-xs text-dim mt-2">${event.description || 'No description yet.'}</div>
+            </div>
+            <span class="badge badge-${event.status === 'published' ? 'green' : event.status === 'poll_active' ? 'orange' : 'purple'}">${event.status}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadEvents();
+  </script>
+</body>
+</html>

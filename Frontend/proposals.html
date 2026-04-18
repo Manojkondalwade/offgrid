@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Organizer Proposals - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="event_manage.html">Events</a></li>
+      <li><a href="sponsors.html">Sponsors</a></li>
+      <li><a href="proposals.html" class="active">Proposals</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">OG</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Sponsor Proposals</h1>
+        <p class="page-subtitle text-muted" id="proposalSubtitle">Loading proposal inbox...</p>
+      </div>
+      <a href="sponsors.html" class="btn btn-secondary">Sponsor Connect</a>
+    </div>
+    <div id="proposalList" class="grid-2">
+      <div class="card"><p class="text-dim">Loading proposals...</p></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function updateProposal(proposalId, status) {
+      const response = await OffGridAuth.authorizedFetch(`/api/organizer/proposals/${proposalId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(payload.error || 'Could not update proposal.', 'error');
+        return;
+      }
+      showToast(`Proposal ${status}.`, 'success');
+      loadProposals();
+    }
+
+    async function loadProposals() {
+      if (!OffGridAuth.requireRole('organizer')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/organizer/proposals');
+      const proposalList = document.getElementById('proposalList');
+      if (!response.ok) {
+        document.getElementById('proposalSubtitle').textContent = 'Unable to load proposals right now.';
+        return;
+      }
+      const proposals = await response.json();
+      document.getElementById('proposalSubtitle').textContent = proposals.length
+        ? `${proposals.length} live proposal${proposals.length === 1 ? '' : 's'} across your events.`
+        : 'No sponsor proposals yet. Published events will start receiving proposals here.';
+      proposalList.innerHTML = proposals.length
+        ? proposals.map((proposal) => `
+            <div class="card">
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:6px;">${escapeHtml(proposal.sponsorName)}</div>
+              <div class="text-dim" style="line-height:1.6;margin-bottom:12px;">
+                Event: ${escapeHtml(proposal.eventTitle)}<br/>
+                Amount: ${escapeHtml(proposal.amount || 'Not specified')}<br/>
+                Status: ${escapeHtml(proposal.status)}
+              </div>
+              <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(proposal.message || 'No message provided.')}</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'accepted')">Accept</button>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'discussing')">Discuss</button>
+                <button class="btn btn-danger btn-sm" type="button" onclick="updateProposal(${proposal.id}, 'rejected')">Reject</button>
+              </div>
+            </div>
+          `).join('')
+        : '<div class="card"><p class="text-dim">No proposals yet. Sponsor interest will appear here automatically.</p></div>';
+    }
+
+    loadProposals();
+  </script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Feed - OffGrid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0a0a0f; color: #e8e8f0; }
+    .glass-nav {
+      background: rgba(10, 10, 15, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glass-card {
+      background: rgba(30, 30, 40, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      background: rgba(40, 40, 50, 0.6);
+      border-color: rgba(124, 106, 247, 0.3);
+    }
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #9999b3;
+      transition: all 0.2s ease;
+    }
+    .filter-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e8e8f0;
+    }
+    .filter-chip.active {
+      background: rgba(124, 106, 247, 0.15);
+      border-color: rgba(124, 106, 247, 0.5);
+      color: #a89cf7;
+      box-shadow: 0 0 15px rgba(124, 106, 247, 0.2);
+    }
+    .search-input-wrapper:focus-within {
+      border-color: #7c6af7;
+      box-shadow: 0 0 0 3px rgba(124,106,247,0.2);
+    }
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-accent-glow selection:text-accent-2">
+  <div class="grid-pattern"></div>
+
+  <!-- NAVBAR -->
+  <nav class="glass-nav sticky top-0 w-full z-50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+        <span class="text-white">Off</span><span class="text-accent">Grid</span>
+      </a>
+      <ul class="hidden md:flex items-center gap-8">
+        <li><a href="student_dashboard.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Home</a></li>
+        <li><a href="feed.html" class="text-accent-2 font-medium text-sm transition-colors flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-accent mt-0.5"></span>Feed</a></li>
+        <li><a href="explore.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Explore</a></li>
+        <li><a href="my_events.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">My Events</a></li>
+        <li><a href="vote.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Vote</a></li>
+      </ul>
+      <div class="flex items-center gap-4">
+        <div class="w-9 h-9 rounded-full bg-surface-2 border border-border flex items-center justify-center font-bold text-sm cursor-pointer hover:border-accent hover:text-accent transition-colors" onclick="window.location='student_profile.html'" title="Profile">
+          ST
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-10 relative z-10 w-full">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-2">Your Feed</h1>
+        <p class="text-text-2 text-base" id="feedSubtitle">Events picked for you based on your interests.</p>
+      </div>
+      <a href="explore.html" class="px-5 py-2.5 glass-card rounded-lg flex items-center gap-2 hover:bg-white/5 font-medium text-sm transition-all focus:ring-2 focus:ring-accent w-fit">
+        Browse All <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+      </a>
+    </div>
+
+    <!-- Search & Filter Area -->
+    <div class="mb-10 space-y-6">
+      <div class="search-input-wrapper flex items-center gap-3 bg-surface-2/50 backdrop-blur-md border border-white/10 rounded-xl px-5 py-3.5 transition-all w-full max-w-2xl">
+        <svg class="text-text-3 w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search events, clubs, topics..." id="searchInput" oninput="filterEvents()" class="bg-transparent border-none outline-none text-white w-full placeholder-text-3 font-medium"/>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button class="filter-chip active px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'all')">All</button>
+        <button class="filter-chip px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'tech')">Tech</button>
+        <button class="filter-chip px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'cultural')">Cultural</button>
+        <button class="filter-chip px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'sports')">Sports</button>
+        <button class="filter-chip px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'workshop')">Workshop</button>
+        <button class="filter-chip px-4 py-2 rounded-full text-sm font-medium" onclick="setFilter(this, 'competition')">Competition</button>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      
+      <!-- Main Feed -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="h-px bg-white/10 flex-1"></div>
+          <span class="text-xs font-bold uppercase tracking-widest text-text-3">Recommended For You</span>
+          <div class="h-px bg-white/10 flex-1"></div>
+        </div>
+
+        <div class="space-y-4" id="eventsList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6 lg:sticky lg:top-24">
+        
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            Your Upcoming
+          </h3>
+          <div id="upcomingBox" class="text-sm text-text-2 space-y-3">
+            <div class="animate-pulse flex space-x-4">
+              <div class="flex-1 space-y-3 py-1">
+                <div class="h-2 bg-surface-2 rounded w-3/4"></div>
+                <div class="h-2 bg-surface-2 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+          <div class="absolute bottom-0 right-0 w-32 h-32 bg-green/10 rounded-full blur-3xl -mr-16 -mb-16 pointer-events-none"></div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            Your Interests
+          </h3>
+          <p class="text-sm text-text-2 leading-relaxed" id="interestBox">
+            <span class="animate-pulse bg-surface-2 h-4 w-full block rounded mb-2"></span>
+            <span class="animate-pulse bg-surface-2 h-4 w-2/3 block rounded"></span>
+          </p>
+          <a href="student_profile.html" class="mt-5 w-full block text-center px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-semibold transition-all">Edit Interests</a>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-32 h-32 bg-orange/10 rounded-full blur-3xl -ml-16 -mt-16 pointer-events-none"></div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-white mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Active Polls
+          </h3>
+          <p class="text-sm text-text-2" id="pollBox">
+            <span class="animate-pulse bg-surface-2 h-4 w-1/2 block rounded"></span>
+          </p>
+        </div>
+
+      </aside>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    let activeFilter = 'all';
+    let registeredEventIds = new Set();
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function setFilter(el, tag) {
+      document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.remove('active'));
+      el.classList.add('active');
+      activeFilter = tag;
+      filterEvents();
+    }
+
+    function filterEvents() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.event-card').forEach((card) => {
+        const tagMatch = activeFilter === 'all' || card.dataset.tag === activeFilter;
+        const textMatch = card.innerText.toLowerCase().includes(query);
+        card.style.display = tagMatch && textMatch ? 'flex' : 'none';
+      });
+    }
+
+    async function registerForEvent(eventId) {
+      const response = await OffGridAuth.authorizedFetch('/api/student/registrations', {
+        method: 'POST',
+        body: JSON.stringify({ eventId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(payload.error || 'Could not register for this event.'); // Fallback since showToast might be external
+        return;
+      }
+      alert(payload.message || 'Registered successfully!');
+      loadFeed();
+    }
+
+    function buildEventCard(event) {
+      const matchScore = event.matchScore ?? 0;
+      const isRegistered = registeredEventIds.has(event.id);
+      
+      const categoryColors = {
+        'tech': 'bg-accent/10 border-accent/20 text-accent',
+        'cultural': 'bg-orange/10 border-orange/20 text-orange',
+        'sports': 'bg-green/10 border-green/20 text-green',
+      };
+      const badgeClass = categoryColors[event.category?.toLowerCase()] || 'bg-white/5 border-white/10 text-text-2';
+
+      return `
+        <article class="event-card glass-card rounded-2xl p-6 flex flex-col sm:flex-row gap-6 group" data-tag="${escapeHtml(event.category || 'general')}">
+          <div class="sm:w-24 sm:h-24 h-16 w-16 flex-shrink-0 rounded-2xl bg-surface flex items-center justify-center text-4xl border border-white/5 shadow-inner group-hover:bg-surface-2 transition-colors">
+            ${escapeHtml(event.emoji || '📅')}
+          </div>
+          <div class="flex-1 flex flex-col justify-center">
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+              <div>
+                <h3 class="text-xl font-bold text-white tracking-tight leading-tight">${escapeHtml(event.title)}</h3>
+                <p class="text-sm font-medium text-text-3 mt-1 flex items-center gap-2 flex-wrap">
+                  <span class="text-text-2">${escapeHtml(event.clubName || 'Campus Organizer')}</span>
+                  <span>•</span>
+                  <span>${escapeHtml(event.date || 'TBD')}</span>
+                  <span>•</span>
+                  <span>${escapeHtml(event.venue || 'Venue pending')}</span>
+                </p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                ${matchScore}% Match
+              </span>
+            </div>
+            
+            <p class="text-sm text-text-2 mb-6 line-clamp-2 leading-relaxed">
+              ${escapeHtml(event.description || 'No description provided yet.')}
+            </p>
+            
+            <div class="flex items-center justify-between mt-auto">
+              <div class="flex items-center gap-2 text-xs font-medium text-text-3">
+                <div class="flex -space-x-2">
+                  <div class="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px]">A</div>
+                  <div class="w-6 h-6 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px]">B</div>
+                </div>
+                <span>${escapeHtml(String(event.registered || 0))}/${escapeHtml(String(event.capacity || 0))} Joined</span>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <a href="event_detail.html?id=${event.id}" class="text-sm font-semibold text-text-2 hover:text-white transition-colors px-2">Details</a>
+                ${isRegistered
+                  ? '<span class="px-4 py-2 rounded-lg bg-surface text-text-3 font-semibold text-sm border border-white/5 cursor-not-allowed">Registered</span>'
+                  : `<button class="px-4 py-2 rounded-lg bg-accent text-white font-semibold text-sm hover:bg-accent-2 transition-all shadow-lg hover:shadow-accent/30" type="button" onclick="registerForEvent(${event.id})">Register</button>`}
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    async function loadFeed() {
+      if (!OffGridAuth.requireRole('student')) return;
+
+      try {
+        const [recommendedRes, dashboardRes, registrationsRes] = await Promise.all([
+          OffGridAuth.authorizedFetch('/api/events/recommended'),
+          OffGridAuth.authorizedFetch('/api/student/dashboard'),
+          OffGridAuth.authorizedFetch('/api/student/registrations')
+        ]);
+
+        if (!recommendedRes.ok || !dashboardRes.ok || !registrationsRes.ok) {
+          throw new Error('Unable to load your personalized feed.');
+        }
+
+        const recommended = await recommendedRes.json();
+        const dashboard = await dashboardRes.json();
+        const registrations = await registrationsRes.json();
+        registeredEventIds = new Set(registrations.map((entry) => entry.event.id));
+        const user = dashboard.user || OffGridAuth.getUser() || {};
+        const interests = user.interests && user.interests.length ? user.interests.join(' • ') : 'No interests selected yet.';
+
+        document.getElementById('feedSubtitle').textContent = recommended.length
+          ? `Found ${recommended.length} curated event${recommended.length === 1 ? '' : 's'} based on your profile.`
+          : 'No personalized matches yet. Explore all published events instead.';
+          
+        document.getElementById('eventsList').innerHTML = recommended.length
+          ? recommended.map(buildEventCard).join('')
+          : '<div class="glass-card rounded-2xl p-8 text-center"><div class="text-4xl mb-4">🌌</div><p class="text-text-2">No recommended events right now.<br/>Head to the Explore tab to find something new.</p></div>';
+          
+        document.getElementById('upcomingBox').innerHTML = registrations.length
+          ? registrations.slice(0, 3).map((entry) => `
+              <div class="py-3 border-b border-white/5 last:border-0 hover:bg-white/5 -mx-2 px-2 rounded transition-colors group cursor-pointer" onclick="window.location='event_detail.html?id=${entry.event.id}'">
+                <div class="font-semibold text-white text-sm truncate group-hover:text-accent transition-colors">${escapeHtml(entry.event.title)}</div>
+                <div class="text-xs text-text-3 mt-1 flex items-center justify-between">
+                  <span>${escapeHtml(entry.event.date || 'TBD')}</span>
+                  <span class="text-accent-2">${escapeHtml(entry.event.time || 'TBD')}</span>
+                </div>
+              </div>`).join('')
+          : '<div class="text-text-3 italic">No upcoming events yet.</div>';
+          
+        document.getElementById('interestBox').innerHTML = interests.split(' • ').map(i => `<span class="inline-block px-2 py-1 rounded bg-surface/50 border border-white/5 text-xs mr-1 mb-1">${escapeHtml(i)}</span>`).join('');
+        document.getElementById('pollBox').innerHTML = `<div class="font-bold text-2xl text-white">${dashboard.activePolls || 0} <span class="text-sm font-medium text-text-3 font-normal">Active Poll${dashboard.activePolls === 1 ? '' : 's'}</span></div>`;
+        
+        filterEvents();
+      } catch (error) {
+        document.getElementById('feedSubtitle').textContent = error.message;
+        document.getElementById('eventsList').innerHTML = '<div class="glass-card rounded-2xl p-8 text-center text-red-400">We could not load your feed just now. Please try again later.</div>';
+      }
+    }
+
+    loadFeed();
+  </script>
+  <script src="js/app.js"></script>
+</body>
+</html>

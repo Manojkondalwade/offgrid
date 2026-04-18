@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .event-list {
+      display: grid;
+      gap: 14px;
+    }
+    .event-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+    }
+    .event-row-main {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      min-width: 0;
+    }
+    .event-emoji {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .event-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .event-meta {
+      color: var(--text-2);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .event-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .section-stack {
+      display: grid;
+      gap: 14px;
+    }
+    @media (max-width: 720px) {
+      .event-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .event-actions {
+        width: 100%;
+      }
+      .event-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html" class="active">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html">My Events</a></li>
+      <li><a href="vote.html">Vote</a></li>
+      <li><a href="student_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-green">Student</span>
+      <div class="avatar" id="studentAvatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title" id="welcomeTitle">Welcome back</h1>
+        <p class="page-subtitle text-muted" id="welcomeSubtitle">Loading your event dashboard...</p>
+      </div>
+      <a href="explore.html" class="btn btn-primary">Explore Events</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card stat-card"><div class="stat-value" id="registeredCount">0</div><div class="text-xs text-dim mt-2">Registered Events</div></div>
+      <div class="card stat-card"><div class="stat-value" id="availableCount">0</div><div class="text-xs text-dim mt-2">Published Events</div></div>
+      <div class="card stat-card"><div class="stat-value" id="pollsVoted">0</div><div class="text-xs text-dim mt-2">Polls Voted</div></div>
+      <div class="card stat-card"><div class="stat-value" id="activePolls">0</div><div class="text-xs text-dim mt-2">Active Polls</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Recommended for You</div>
+        <div class="section-stack" id="recommendedList">
+          <p class="text-dim">Loading recommendations...</p>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Your Registrations</div>
+        <div class="section-stack" id="registrationList">
+          <p class="text-dim">Loading your registrations...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function eventSummary(event) {
+      const tagText = Array.isArray(event.tags) && event.tags.length ? event.tags.join(', ') : 'No tags yet';
+      return `
+        <div class="event-row card">
+          <div class="event-row-main">
+            <div class="event-emoji">${escapeHtml(event.emoji || '📅')}</div>
+            <div>
+              <div class="event-title">${escapeHtml(event.title)}</div>
+              <div class="event-meta">
+                ${escapeHtml(event.clubName || 'Campus Organizer')}<br/>
+                ${escapeHtml(event.date || 'TBD')} at ${escapeHtml(event.time || 'TBD')}<br/>
+                ${escapeHtml(event.venue || 'Venue to be announced')}<br/>
+                Tags: ${escapeHtml(tagText)}
+              </div>
+            </div>
+          </div>
+          <div class="event-actions">
+            <a href="explore.html" class="btn btn-ghost btn-sm">Open in Explore</a>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadDashboard() {
+      if (!OffGridAuth.requireRole('student')) return;
+
+      const user = OffGridAuth.getUser() || {};
+      const firstName = (user.name || 'Student').split(' ')[0];
+      document.getElementById('welcomeTitle').textContent = `Welcome back, ${firstName}`;
+      document.getElementById('studentAvatar').textContent = (user.name || 'ST').slice(0, 2).toUpperCase();
+
+      try {
+        const [dashboardRes, recommendedRes, publicEventsRes, registrationsRes] = await Promise.all([
+          OffGridAuth.authorizedFetch('/api/student/dashboard'),
+          OffGridAuth.authorizedFetch('/api/events/recommended'),
+          fetch('/api/events'),
+          OffGridAuth.authorizedFetch('/api/student/registrations')
+        ]);
+
+        if (!dashboardRes.ok || !recommendedRes.ok || !publicEventsRes.ok || !registrationsRes.ok) {
+          throw new Error('Unable to load student event data.');
+        }
+
+        const dashboard = await dashboardRes.json();
+        const recommended = await recommendedRes.json();
+        const publicEvents = await publicEventsRes.json();
+        const registrations = await registrationsRes.json();
+
+        document.getElementById('registeredCount').textContent = dashboard.registeredCount ?? 0;
+        document.getElementById('availableCount').textContent = publicEvents.length;
+        document.getElementById('pollsVoted').textContent = dashboard.pollsVoted ?? 0;
+        document.getElementById('activePolls').textContent = dashboard.activePolls ?? 0;
+        document.getElementById('welcomeSubtitle').textContent = publicEvents.length
+          ? `${publicEvents.length} organizer event${publicEvents.length === 1 ? '' : 's'} are live for students right now.`
+          : 'There are no published events available right now.';
+
+        const recommendedList = document.getElementById('recommendedList');
+        recommendedList.innerHTML = recommended.length
+          ? recommended.slice(0, 3).map(eventSummary).join('')
+          : '<p class="text-dim">No recommendations yet. New organizer events will appear here once they match your interests.</p>';
+
+        const registrationList = document.getElementById('registrationList');
+        registrationList.innerHTML = registrations.length
+          ? registrations.slice(0, 3).map((entry) => eventSummary(entry.event || {})).join('')
+          : '<p class="text-dim">You have not registered for any events yet. Head to Explore to join one.</p>';
+      } catch (error) {
+        document.getElementById('welcomeSubtitle').textContent = error.message;
+        document.getElementById('recommendedList').innerHTML = '<p class="text-dim">We could not load recommendations just now.</p>';
+        document.getElementById('registrationList').innerHTML = '<p class="text-dim">We could not load your registrations just now.</p>';
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

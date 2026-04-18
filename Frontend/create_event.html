@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Event - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .create-layout { display:grid; grid-template-columns:1fr 320px; gap:28px; align-items:start; }
+    .form-section { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:28px; margin-bottom:20px; }
+    .form-section-title { font-family:var(--font-display); font-weight:700; font-size:1rem; color:var(--text); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .tag-input-area { display:flex; flex-wrap:wrap; gap:8px; padding:10px; background:var(--bg-2); border:1px solid var(--border-2); border-radius:9px; min-height:46px; align-items:center; }
+    .tag-chip { display:flex; align-items:center; gap:5px; padding:3px 10px; border-radius:99px; background:var(--accent-glow); color:var(--accent-2); font-size:0.78rem; border:1px solid rgba(124,106,247,0.3); }
+    .tag-chip-remove { cursor:pointer; color:var(--text-3); font-size:1rem; line-height:1; }
+    .tag-input { border:none; background:none; outline:none; color:var(--text); font-family:var(--font-body); font-size:0.875rem; flex:1; min-width:80px; }
+    .slot-row { display:flex; align-items:center; gap:10px; padding:12px; background:var(--bg-2); border:1px solid var(--border); border-radius:9px; margin-bottom:10px; }
+    .slot-row input { flex:1; }
+    .preview-card { background:var(--bg-3); border:1px solid var(--border-2); border-radius:var(--radius-lg); overflow:hidden; position:sticky; top:80px; }
+    .preview-banner { height:120px; background:linear-gradient(135deg,#1a1a2e,#16213e); display:flex; align-items:center; justify-content:center; font-size:2.5rem; }
+    .preview-body { padding:18px; }
+    .preview-title { font-family:var(--font-display); font-weight:700; font-size:0.95rem; color:var(--text); margin-bottom:8px; }
+    .preview-meta { font-size:0.78rem; color:var(--text-3); display:flex; flex-direction:column; gap:4px; }
+    @media (max-width: 900px) { .create-layout { grid-template-columns:1fr; } .preview-card { position:static; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="event_manage.html">Events</a></li>
+      <li><a href="sponsors.html">Sponsors</a></li>
+      <li><a href="proposals.html">Proposals</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">CD</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Create New Event</h1>
+      <p class="page-subtitle text-muted">Publish a live organizer event to the OffGrid platform.</p>
+    </div>
+
+    <div class="create-layout">
+      <div>
+        <div class="form-section">
+          <div class="form-section-title">Basic Information</div>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="form-group">
+              <label class="form-label">Event Name *</label>
+              <input type="text" class="form-input" placeholder="e.g. Campus Hack Night" id="evtName" oninput="updatePreview()"/>
+            </div>
+            <div class="grid-2" style="gap:14px;">
+              <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select class="form-select" id="evtCat" onchange="updatePreview()">
+                  <option value="">Select category</option>
+                  <option value="tech">Tech</option>
+                  <option value="cultural">Cultural</option>
+                  <option value="sports">Sports</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="competition">Competition</option>
+                  <option value="academic">Academic</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Event Mode</label>
+                <select class="form-select" id="evtMode">
+                  <option>In-Person</option>
+                  <option>Online</option>
+                  <option>Hybrid</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Description *</label>
+              <textarea class="form-textarea" placeholder="What is this event about?" id="evtDesc" oninput="updatePreview()" style="min-height:80px;"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tags (press Enter to add)</label>
+              <div class="tag-input-area" id="tagArea">
+                <input type="text" class="tag-input" placeholder="Add tag..." id="tagInput" onkeydown="handleTagInput(event)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Schedule & Venue</div>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg-2);border-radius:9px;border:1px solid var(--border);">
+              <input type="checkbox" id="enablePoll" onchange="togglePoll(this)" style="width:16px;height:16px;accent-color:var(--accent)"/>
+              <div>
+                <label for="enablePoll" style="font-weight:500;cursor:pointer;">Enable Time Polling</label>
+                <div class="form-hint">Let students vote on the best time slot instead of setting a fixed time.</div>
+              </div>
+            </div>
+
+            <div id="fixedTime">
+              <div class="grid-2" style="gap:14px;">
+                <div class="form-group">
+                  <label class="form-label">Event Date *</label>
+                  <input type="date" class="form-input" id="evtDate" onchange="updatePreview()"/>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Start Time *</label>
+                  <input type="time" class="form-input" id="evtTime" onchange="updatePreview()"/>
+                </div>
+              </div>
+            </div>
+
+            <div id="pollSlots" style="display:none;" aria-hidden="true">
+              <label class="form-label" style="margin-bottom:10px;display:block;">Time Slot Options for Voting</label>
+              <div id="slotList"></div>
+              <button type="button" class="btn btn-secondary btn-sm mt-2" id="addSlotBtn" onclick="addSlot()">+ Add Slot</button>
+            </div>
+
+            <div class="grid-2" style="gap:14px;">
+              <div class="form-group">
+                <label class="form-label">Venue / Location</label>
+                <input type="text" class="form-input" placeholder="e.g. CS Block, Hall 3" id="evtVenue" oninput="updatePreview()"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Max Participants</label>
+                <input type="number" class="form-input" placeholder="Leave blank for unlimited" id="evtMax"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">Registration</div>
+          <div class="grid-2" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Registration Fee</label>
+              <input type="number" class="form-input" placeholder="0 for free" value="0" id="evtFee"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Team Size</label>
+              <select class="form-select" id="evtTeamSize">
+                <option>Individual</option>
+                <option selected>2-4 members</option>
+                <option>Any</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3">
+          <button type="button" class="btn btn-secondary" onclick="submitEvent('draft')">Save Draft</button>
+          <button type="button" class="btn btn-primary" id="publishBtn" onclick="submitEvent('published')">Publish Event</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Live Preview</div>
+        <div class="preview-card">
+          <div class="preview-banner" id="prevBanner">🗓️</div>
+          <div class="preview-body">
+            <div class="event-card-tags flex gap-2" style="margin-bottom:10px;">
+              <span class="badge badge-purple" id="prevCat">Category</span>
+              <span class="badge badge-green" id="prevStatus">Draft</span>
+            </div>
+            <div class="preview-title" id="prevTitle">Your event title will appear here</div>
+            <div class="preview-meta" id="prevMeta">
+              <span id="prevDate">📅 Date not set</span>
+              <span id="prevVenue">📍 Venue not set</span>
+            </div>
+            <div style="margin-top:12px;font-size:0.8rem;color:var(--text-3);line-height:1.6;" id="prevDesc">Short description will appear here...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    OffGridAuth.requireRole('organizer');
+
+    function showToast(msg, type) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span><span style="font-size:0.875rem;">${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    function updatePreview() {
+      const name = document.getElementById('evtName').value;
+      const cat = document.getElementById('evtCat').value;
+      const desc = document.getElementById('evtDesc').value;
+      const date = document.getElementById('evtDate').value;
+      const venue = document.getElementById('evtVenue').value;
+
+      document.getElementById('prevTitle').textContent = name || 'Your event title will appear here';
+      document.getElementById('prevCat').textContent = cat || 'Category';
+      document.getElementById('prevDesc').textContent = desc || 'Short description will appear here...';
+      document.getElementById('prevDate').textContent = date ? `📅 ${new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : '📅 Date not set';
+      document.getElementById('prevVenue').textContent = venue ? `📍 ${venue}` : '📍 Venue not set';
+    }
+
+    function handleTagInput(e) {
+      if (e.key !== 'Enter') return;
+      const val = e.target.value.trim();
+      if (!val) return;
+      const chip = document.createElement('span');
+      chip.className = 'tag-chip';
+      chip.innerHTML = `${val} <span class="tag-chip-remove" onclick="removeTag(this)">×</span>`;
+      document.getElementById('tagArea').insertBefore(chip, e.target);
+      e.target.value = '';
+      e.preventDefault();
+    }
+
+    function removeTag(el) {
+      el.parentElement.remove();
+    }
+
+    function togglePoll(cb) {
+      document.getElementById('fixedTime').style.display = cb.checked ? 'none' : 'block';
+      const pollSlots = document.getElementById('pollSlots');
+      pollSlots.style.display = cb.checked ? 'block' : 'none';
+      pollSlots.setAttribute('aria-hidden', cb.checked ? 'false' : 'true');
+      if (cb.checked && !document.querySelector('.slot-row')) {
+        addSlot();
+        addSlot();
+      }
+    }
+
+    function addSlot() {
+      const row = document.createElement('div');
+      row.className = 'slot-row';
+      row.innerHTML = '<input type="date" class="form-input poll-date"/><input type="time" class="form-input poll-time" style="width:120px;"/><button type="button" class="btn btn-ghost btn-sm remove-slot-btn" onclick="this.parentElement.remove()">×</button>';
+      document.getElementById('slotList').appendChild(row);
+    }
+
+    function getTags() {
+      return Array.from(document.querySelectorAll('#tagArea .tag-chip')).map((chip) => chip.childNodes[0].textContent.trim()).filter(Boolean);
+    }
+
+    function getPollOptions() {
+      return Array.from(document.querySelectorAll('.slot-row')).map((row) => {
+        const date = row.querySelector('.poll-date')?.value;
+        const time = row.querySelector('.poll-time')?.value;
+        if (!date || !time) return null;
+        const dateLabel = new Date(date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+        const [hours, minutes] = time.split(':');
+        const formatted = new Date(2000, 0, 1, hours, minutes).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
+        return `${dateLabel} - ${formatted}`;
+      }).filter(Boolean);
+    }
+
+    function getEmoji(category) {
+      return {
+        tech: '💻',
+        cultural: '🎭',
+        sports: '⚽',
+        workshop: '🔧',
+        competition: '🏆',
+        academic: '📚'
+      }[category] || '🗓️';
+    }
+
+    async function submitEvent(status) {
+      const user = OffGridAuth.getUser();
+      const title = document.getElementById('evtName').value.trim();
+      const category = document.getElementById('evtCat').value;
+      const description = document.getElementById('evtDesc').value.trim();
+      const venue = document.getElementById('evtVenue').value.trim();
+      const capacityRaw = document.getElementById('evtMax').value;
+      const pollingEnabled = document.getElementById('enablePoll').checked;
+
+      if (!title || !category || !description) {
+        showToast('Please fill the required fields first.', 'error');
+        return;
+      }
+
+      const pollOptions = pollingEnabled ? getPollOptions() : [];
+      if (pollingEnabled && pollOptions.length < 2) {
+        showToast('Add at least two valid poll slots.', 'error');
+        return;
+      }
+
+      const payload = {
+        title,
+        description,
+        category,
+        emoji: getEmoji(category),
+        date: pollingEnabled ? 'TBD' : (document.getElementById('evtDate').value || 'TBD'),
+        time: pollingEnabled ? 'TBD' : (document.getElementById('evtTime').value || 'TBD'),
+        venue,
+        capacity: capacityRaw ? Number(capacityRaw) : 100,
+        status,
+        tags: getTags(),
+        clubName: user?.name || 'Organizer',
+        pollOptions
+      };
+
+      const publishBtn = document.getElementById('publishBtn');
+      publishBtn.disabled = true;
+      publishBtn.textContent = status === 'draft' ? 'Saving...' : 'Publishing...';
+
+      try {
+        const res = await OffGridAuth.authorizedFetch('/api/organizer/events', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.error || 'Unable to create event.', 'error');
+          return;
+        }
+        showToast(`Event "${data.title}" created successfully.`, 'success');
+        setTimeout(() => {
+          window.location.href = 'event_manage.html';
+        }, 700);
+      } catch (_) {
+        showToast('Could not reach the event service.', 'error');
+      } finally {
+        publishBtn.disabled = false;
+        publishBtn.textContent = 'Publish Event';
+      }
+    }
+  </script>
+</body>
+</html>

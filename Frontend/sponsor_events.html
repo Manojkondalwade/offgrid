@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sponsor Events - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/feed.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="sponsor_dashboard.html">Dashboard</a></li>
+      <li><a href="sponsor_events.html" class="active">All Events</a></li>
+      <li><a href="sponsor_proposals.html">Proposals</a></li>
+      <li><a href="sponsor_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-orange">Sponsor</span>
+      <div class="avatar" onclick="window.location='sponsor_profile.html'" style="cursor:pointer;" title="Profile">SP</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Sponsor Discovery</h1>
+      <p class="page-subtitle text-muted" id="sponsorEventsSubtitle">Loading matching events...</p>
+    </div>
+    <div class="events-grid" id="sponsorEventGrid"></div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function loadSponsorEvents() {
+      if (!OffGridAuth.requireRole('sponsor')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/sponsor/discover');
+      const grid = document.getElementById('sponsorEventGrid');
+      if (!response.ok) {
+        document.getElementById('sponsorEventsSubtitle').textContent = 'Unable to load events right now.';
+        return;
+      }
+      const events = await response.json();
+      document.getElementById('sponsorEventsSubtitle').textContent = events.length
+        ? `${events.length} live events are open for sponsorship.`
+        : 'No live sponsorship opportunities right now.';
+      grid.innerHTML = events.length
+        ? events.map((event) => `
+            <article class="card" style="padding:18px;">
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:6px;">${escapeHtml(event.title)}</div>
+              <div class="text-dim" style="line-height:1.6;margin-bottom:10px;">
+                ${escapeHtml(event.clubName || 'Campus Organizer')}<br/>
+                ${escapeHtml(event.date || 'TBD')} • ${escapeHtml(event.venue || 'Venue pending')}<br/>
+                Match score: ${escapeHtml(String(event.matchScore || 0))}
+              </div>
+              <p class="text-dim" style="margin-bottom:12px;">${escapeHtml(event.description || 'No description provided yet.')}</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a href="sponsor_event_detail.html?id=${event.id}" class="btn btn-primary btn-sm">Open Event</a>
+                <span class="badge badge-blue">${escapeHtml(event.proposalStatus || 'No proposal sent')}</span>
+              </div>
+            </article>
+          `).join('')
+        : '<div class="card"><p class="text-dim">No events available for sponsorship yet.</p></div>';
+    }
+
+    loadSponsorEvents();
+  </script>
+</body>
+</html>

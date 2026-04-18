@@ -1,0 +1,1 @@
+# firebase.py - Offgrid Platform

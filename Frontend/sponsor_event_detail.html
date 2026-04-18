@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sponsor Event Detail - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="sponsor_dashboard.html">Dashboard</a></li>
+      <li><a href="sponsor_events.html">All Events</a></li>
+      <li><a href="sponsor_proposals.html">Proposals</a></li>
+      <li><a href="sponsor_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-orange">Sponsor</span>
+      <div class="avatar" onclick="window.location='sponsor_profile.html'" style="cursor:pointer;" title="Profile">SP</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div id="sponsorEventCard" class="card">
+      <p class="text-dim">Loading sponsorship opportunity...</p>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function sendProposal(eventId) {
+      const amount = document.getElementById('proposalAmount').value.trim();
+      const perks = document.getElementById('proposalPerks').value.trim();
+      const message = document.getElementById('proposalMessage').value.trim();
+      const response = await OffGridAuth.authorizedFetch('/api/sponsor/proposals', {
+        method: 'POST',
+        body: JSON.stringify({ eventId, amount, perks, message })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(payload.error || 'Could not send proposal.', 'error');
+        return;
+      }
+      showToast(payload.message || 'Proposal sent!', 'success');
+      loadEvent();
+    }
+
+    async function loadEvent() {
+      if (!OffGridAuth.requireRole('sponsor')) return;
+      const eventId = getParam('id');
+      const card = document.getElementById('sponsorEventCard');
+      if (!eventId) {
+        card.innerHTML = '<p class="text-dim">No event selected. Open an event from Sponsor Events.</p>';
+        return;
+      }
+      const [eventRes, discoverRes] = await Promise.all([
+        fetch(`/api/events/${eventId}`),
+        OffGridAuth.authorizedFetch('/api/sponsor/discover')
+      ]);
+      if (!eventRes.ok || !discoverRes.ok) {
+        card.innerHTML = '<p class="text-dim">Unable to load this sponsorship opportunity right now.</p>';
+        return;
+      }
+      const event = await eventRes.json();
+      const discover = await discoverRes.json();
+      const discoverEntry = discover.find((item) => item.id === Number(eventId)) || {};
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--text);margin-bottom:6px;">${escapeHtml(event.title)}</div>
+            <div class="text-dim" style="line-height:1.7;">
+              ${escapeHtml(event.clubName || 'Campus Organizer')}<br/>
+              ${escapeHtml(event.date || 'TBD')} at ${escapeHtml(event.time || 'TBD')}<br/>
+              ${escapeHtml(event.venue || 'Venue pending')}<br/>
+              Match score: ${escapeHtml(String(discoverEntry.matchScore || 0))}
+            </div>
+          </div>
+          <span class="badge badge-blue">${escapeHtml(discoverEntry.proposalStatus || 'No proposal sent')}</span>
+        </div>
+        <p class="text-dim" style="margin-top:16px;">${escapeHtml(event.description || 'No description provided yet.')}</p>
+        <div style="margin-top:20px;display:grid;gap:12px;">
+          <input id="proposalAmount" class="form-input" placeholder="Proposal amount, e.g. ₹50,000"/>
+          <input id="proposalPerks" class="form-input" placeholder="Requested perks, e.g. branding, stalls, speaking slot"/>
+          <textarea id="proposalMessage" class="form-input" rows="5" placeholder="Write your sponsorship pitch..."></textarea>
+          <button class="btn btn-primary" type="button" onclick="sendProposal(${event.id})">Send Proposal</button>
+        </div>
+      `;
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+# validators.py - Offgrid Platform

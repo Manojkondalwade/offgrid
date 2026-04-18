@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Organizer Dashboard - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+      <li><a href="event_manage.html">Events</a></li>
+      <li><a href="sponsors.html">Sponsors</a></li>
+      <li><a href="proposals.html">Proposals</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">CD</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title" id="orgName">Organizer Dashboard</h1>
+        <p class="page-subtitle text-muted">Live organizer overview from the API.</p>
+      </div>
+      <a href="create_event.html" class="btn btn-primary">+ New Event</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-label">Total Events</div><div class="stat-card-value" id="totalEvents">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Registrations</div><div class="stat-card-value" id="totalRegistrations">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Active Sponsors</div><div class="stat-card-value" id="pendingProposals">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Poll Responses</div><div class="stat-card-value" id="activePolls">0</div></div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Your Events</div>
+      <div id="eventsSummary" class="text-dim">Loading organizer summary...</div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    OffGridAuth.requireRole('organizer');
+
+    async function loadDashboard() {
+      const user = OffGridAuth.getUser();
+      if (user?.name) document.getElementById('orgName').textContent = user.name;
+
+      const res = await OffGridAuth.authorizedFetch('/api/organizer/dashboard');
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('eventsSummary').textContent = data.error || 'Unable to load organizer dashboard.';
+        return;
+      }
+
+      document.getElementById('totalEvents').textContent = data.totalEvents || 0;
+      document.getElementById('totalRegistrations').textContent = data.totalRegistrations || 0;
+      document.getElementById('pendingProposals').textContent = data.pendingProposals || 0;
+      document.getElementById('activePolls').textContent = data.activePolls || 0;
+
+      if (!data.events?.length) {
+        document.getElementById('eventsSummary').textContent = 'No events yet. Create one to get started.';
+        return;
+      }
+
+      document.getElementById('eventsSummary').innerHTML = data.events.map((event) => `
+        <div class="card" style="margin-top:12px;background:var(--bg-2);">
+          <div style="font-family:var(--font-display);font-weight:700;color:var(--text);">${event.emoji || '🗓️'} ${event.title}</div>
+          <div class="text-xs text-dim mt-2">${event.date} · ${event.time} · ${event.venue || 'Venue TBD'}</div>
+        </div>
+      `).join('');
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html">My Events</a></li>
+      <li><a href="vote.html">Vote</a></li>
+      <li><a href="student_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-green">Student</span>
+      <div class="avatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-subtitle text-muted" id="notifSubtitle">Loading live updates...</p>
+      </div>
+    </div>
+    <div id="notifList" class="card">
+      <p class="text-dim">Loading notifications...</p>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function loadNotifications() {
+      if (!OffGridAuth.requireRole('student')) return;
+      try {
+        const [dashboardRes, registrationsRes, pollsRes, recommendedRes] = await Promise.all([
+          OffGridAuth.authorizedFetch('/api/student/dashboard'),
+          OffGridAuth.authorizedFetch('/api/student/registrations'),
+          OffGridAuth.authorizedFetch('/api/student/polls'),
+          OffGridAuth.authorizedFetch('/api/events/recommended')
+        ]);
+        if (!dashboardRes.ok || !registrationsRes.ok || !pollsRes.ok || !recommendedRes.ok) {
+          throw new Error('Unable to load notifications right now.');
+        }
+        const dashboard = await dashboardRes.json();
+        const registrations = await registrationsRes.json();
+        const polls = await pollsRes.json();
+        const recommended = await recommendedRes.json();
+
+        const items = [];
+        registrations.forEach((entry) => {
+          items.push({
+            title: `You are registered for ${entry.event.title}`,
+            body: `${entry.event.date || 'TBD'} at ${entry.event.time || 'TBD'} • ${entry.event.venue || 'Venue pending'}`
+          });
+        });
+        polls.forEach((poll) => {
+          items.push({
+            title: poll.myVoteOptionId ? `You already voted on ${poll.title}` : `Vote now: ${poll.title}`,
+            body: poll.question
+          });
+        });
+        recommended.slice(0, 3).forEach((event) => {
+          items.push({
+            title: `Recommended event: ${event.title}`,
+            body: `${event.clubName || 'Campus Organizer'} • Match score ${event.matchScore ?? 0}`
+          });
+        });
+
+        document.getElementById('notifSubtitle').textContent = `${items.length} live update${items.length === 1 ? '' : 's'} for ${dashboard.user.name}.`;
+        document.getElementById('notifList').innerHTML = items.length
+          ? items.map((item) => `
+              <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+                <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:4px;">${escapeHtml(item.title)}</div>
+                <div class="text-dim">${escapeHtml(item.body)}</div>
+              </div>
+            `).join('')
+          : '<p class="text-dim">No live notifications yet. New registrations, recommendations, and poll updates will appear here.</p>';
+      } catch (error) {
+        document.getElementById('notifSubtitle').textContent = error.message;
+        document.getElementById('notifList').innerHTML = `<p class="text-dim">${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    loadNotifications();
+  </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/dashboard.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="event_manage.html">Events</a></li>
+      <li><a href="sponsors.html">Sponsors</a></li>
+      <li><a href="proposals.html">Proposals</a></li>
+      <li><a href="analytics.html" class="active">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">OG</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Analytics</h1>
+      <p class="page-subtitle text-muted" id="analyticsSubtitle">Loading organizer analytics...</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-label">Registrations</div><div class="stat-card-value" id="regCount">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Events</div><div class="stat-card-value" id="eventCount">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Top Event</div><div class="stat-card-value" id="topEventCount">0</div></div>
+      <div class="stat-card"><div class="stat-card-label">Proposal Inbox</div><div class="stat-card-value" id="proposalCount">0</div></div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+      <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Top Performing Events</div>
+      <div id="topEventsList"><p class="text-dim">Loading performance metrics...</p></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function loadAnalytics() {
+      if (!OffGridAuth.requireRole('organizer')) return;
+      const [analyticsRes, proposalsRes] = await Promise.all([
+        OffGridAuth.authorizedFetch('/api/organizer/analytics'),
+        OffGridAuth.authorizedFetch('/api/organizer/proposals')
+      ]);
+      if (!analyticsRes.ok || !proposalsRes.ok) {
+        document.getElementById('analyticsSubtitle').textContent = 'Unable to load analytics right now.';
+        return;
+      }
+      const analytics = await analyticsRes.json();
+      const proposals = await proposalsRes.json();
+      const topEvent = analytics.topEvents && analytics.topEvents.length ? analytics.topEvents[0] : null;
+
+      document.getElementById('regCount').textContent = analytics.totalRegistrations || 0;
+      document.getElementById('eventCount').textContent = analytics.totalEvents || 0;
+      document.getElementById('topEventCount').textContent = topEvent ? topEvent.registrations : 0;
+      document.getElementById('proposalCount').textContent = proposals.length;
+      document.getElementById('analyticsSubtitle').textContent = analytics.totalEvents
+        ? `Live metrics from your ${analytics.totalEvents} organizer event${analytics.totalEvents === 1 ? '' : 's'}.`
+        : 'Create and publish events to start collecting analytics.';
+      document.getElementById('topEventsList').innerHTML = analytics.topEvents && analytics.topEvents.length
+        ? analytics.topEvents.map((event) => `<div style="padding:12px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:14px;"><span>${escapeHtml(event.title)}</span><strong>${escapeHtml(String(event.registrations))} registrations</strong></div>`).join('')
+        : '<p class="text-dim">No event performance data yet.</p>';
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

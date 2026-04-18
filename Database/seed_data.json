@@ -1,0 +1,45 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Arjun Sharma",
+      "email": "student@college.edu",
+      "role": "student",
+      "branch": "CSE",
+      "year": 3,
+      "college": "VJTI Mumbai",
+      "interests": "tech,hackathon,ai,music",
+      "password": "student123"
+    },
+    {
+      "id": 2,
+      "name": "CodeDecode Club",
+      "email": "organizer@college.edu",
+      "role": "organizer",
+      "college": "VJTI Mumbai",
+      "password": "organizer123"
+    },
+    {
+      "id": 3,
+      "name": "TechCorp India",
+      "email": "sponsor@techcorp.in",
+      "role": "sponsor",
+      "interests": "hackathon,tech,coding",
+      "password": "sponsor123"
+    },
+    {
+      "id": 4,
+      "name": "Priya Sharma",
+      "email": "priya@college.edu",
+      "role": "student",
+      "branch": "IT",
+      "year": 2,
+      "college": "VJTI Mumbai",
+      "interests": "cultural,music,dance",
+      "password": "priya123"
+    }
+  ],
+  "events": [],
+  "polls": [],
+  "proposals": []
+}

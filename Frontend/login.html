@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In — OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .auth-page {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 64px);
+    }
+    .auth-left {
+      background: var(--bg-2);
+      border-right: 1px solid var(--border);
+      padding: 60px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: -80px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(124,106,247,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .auth-headline {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      color: var(--text);
+      margin-bottom: 16px;
+      line-height: 1.1;
+    }
+    .auth-headline span { color: var(--accent-2); }
+    .auth-tagline { color: var(--text-2); font-size: 1rem; line-height: 1.7; margin-bottom: 48px; }
+    .auth-feature {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-feature:last-of-type { border-bottom: none; }
+    .auth-feat-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .auth-feat-title { font-size: 0.9rem; font-weight: 500; color: var(--text); }
+    .auth-feat-sub { font-size: 0.8rem; color: var(--text-3); }
+
+    .auth-right {
+      padding: 60px 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      background: var(--bg-2);
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: var(--text-2);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .tab-btn.active {
+      background: var(--surface-2);
+      color: var(--text);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 18px; }
+    .auth-form-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .auth-form-sub { color: var(--text-2); font-size: 0.875rem; margin-bottom: 8px; }
+
+    .role-select-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .role-option {
+      border: 1px solid var(--border-2);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .role-option:hover { border-color: var(--accent); }
+    .role-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .role-option-icon { font-size: 1.4rem; margin-bottom: 6px; }
+    .role-option-label { font-size: 0.78rem; font-weight: 500; color: var(--text-2); }
+    .role-option.selected .role-option-label { color: var(--accent-2); }
+
+    .divider-or {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-3);
+      font-size: 0.78rem;
+    }
+    .divider-or::before, .divider-or::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 11px;
+      border-radius: 9px;
+      border: 1px solid var(--border-2);
+      background: var(--bg-2);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+      width: 100%;
+      text-decoration: none;
+    }
+    .oauth-btn:hover { background: var(--surface); border-color: var(--border-2); }
+
+    .auth-footer-link {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-3);
+      margin-top: 8px;
+    }
+    .auth-footer-link a { color: var(--accent-2); text-decoration: none; }
+    .auth-footer-link a:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      .auth-page { grid-template-columns: 1fr; }
+      .auth-left { display: none; }
+      .auth-right { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <div></div>
+    <div class="navbar-actions">
+      <a href="explore.html" class="btn btn-ghost btn-sm">Browse Events</a>
+    </div>
+  </nav>
+
+  <div class="auth-page">
+    <!-- LEFT PANEL -->
+    <div class="auth-left">
+      <h1 class="auth-headline">Your campus,<br/><span>connected.</span></h1>
+      <p class="auth-tagline">One account unlocks events, polls, sponsor networks, and more for your entire college community.</p>
+      <div class="auth-feature">
+        <div class="auth-feat-icon icon-purple">🎯</div>
+        <div>
+          <div class="auth-feat-title">Smart Event Feed</div>
+          <div class="auth-feat-sub">Events recommended based on your interests</div>
+        </div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feat-icon icon-green">🗳️</div>
+        <div>
+          <div class="auth-feat-title">Time Polling</div>
+          <div class="auth-feat-sub">Vote on event timings that work for you</div>
+        </div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feat-icon icon-orange">🤝</div>
+        <div>
+          <div class="auth-feat-title">Sponsor Connect</div>
+          <div class="auth-feat-sub">Bridge between clubs and sponsors</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="auth-right">
+      <div style="max-width:400px; width:100%; margin:0 auto;">
+        <div id="authStatus" class="card" style="display:none;padding:12px 14px;margin-bottom:16px;font-size:0.85rem;"></div>
+        <div class="tab-bar" role="tablist" aria-label="Authentication options">
+          <button class="tab-btn active" id="tab-login" type="button" role="tab" aria-selected="true" aria-controls="form-login" onclick="showTab('login')">Sign In</button>
+          <button class="tab-btn" id="tab-register" type="button" role="tab" aria-selected="false" aria-controls="form-register" onclick="showTab('register')">Create Account</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="form-login" class="auth-form" role="tabpanel" aria-labelledby="tab-login" aria-hidden="false" onsubmit="handleLogin(event)">
+          <div>
+            <div class="auth-form-title">Welcome back</div>
+            <div class="auth-form-sub">Sign in to your OffGrid account</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input id="login-email" type="email" class="form-input" placeholder="you@college.edu"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input id="login-pass" type="password" class="form-input" placeholder="••••••••"/>
+            <div class="form-hint" style="text-align:right"><a href="#" style="color:var(--accent-2);font-size:0.78rem;text-decoration:none;">Forgot password?</a></div>
+          </div>
+          <button class="btn btn-primary" type="submit" style="justify-content:center;">Sign In →</button>
+          <div class="divider-or">or</div>
+          <button class="oauth-btn" type="button">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+            Continue with Google
+          </button>
+          <div class="auth-footer-link">Don't have an account? <a href="#" onclick="showTab('register')">Sign up</a></div>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="form-register" class="auth-form" role="tabpanel" aria-labelledby="tab-register" aria-hidden="true" style="display:none;" onsubmit="handleRegister(event)">
+          <div>
+            <div class="auth-form-title">Join OffGrid</div>
+            <div class="auth-form-sub">Create your account in 30 seconds</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">I am a...</label>
+            <div class="role-select-grid">
+              <div class="role-option selected" onclick="selectRole(this)">
+                <div class="role-option-icon">🎓</div>
+                <div class="role-option-label">Student</div>
+              </div>
+              <div class="role-option" onclick="selectRole(this)">
+                <div class="role-option-icon">🏛️</div>
+                <div class="role-option-label">Organizer</div>
+              </div>
+              <div class="role-option" onclick="selectRole(this)">
+                <div class="role-option-icon">💼</div>
+                <div class="role-option-label">Sponsor</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid-2" style="gap:14px;">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input type="text" class="form-input" placeholder="Arjun"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input type="text" class="form-input" placeholder="Sharma"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">College Email</label>
+            <input type="email" class="form-input" placeholder="arjun@college.edu"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="form-input" placeholder="Min. 8 characters"/>
+          </div>
+          <button class="btn btn-primary" type="submit" style="justify-content:center;">Create Account →</button>
+          <div class="divider-or">or</div>
+          <button class="oauth-btn" type="button">
+            <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+            Sign up with Google
+          </button>
+          <div class="auth-footer-link">Already have an account? <a href="#" onclick="showTab('login')">Sign in</a></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function setAuthStatus(message, type = 'info') {
+      const status = document.getElementById('authStatus');
+      const themes = {
+        success: ['var(--green)', 'rgba(37, 211, 102, 0.12)'],
+        error: ['var(--red)', 'rgba(255, 82, 82, 0.12)'],
+        info: ['var(--accent-2)', 'rgba(124, 106, 247, 0.12)']
+      };
+      const theme = themes[type] || themes.info;
+      status.style.display = 'block';
+      status.style.border = `1px solid ${theme[0]}`;
+      status.style.background = theme[1];
+      status.style.color = 'var(--text)';
+      status.textContent = message;
+    }
+
+    function showTab(tab) {
+      const isLogin = tab === 'login';
+      const loginForm = document.getElementById('form-login');
+      const registerForm = document.getElementById('form-register');
+      const loginTab = document.getElementById('tab-login');
+      const registerTab = document.getElementById('tab-register');
+
+      loginForm.style.display = isLogin ? 'flex' : 'none';
+      loginForm.setAttribute('aria-hidden', isLogin ? 'false' : 'true');
+      registerForm.style.display = isLogin ? 'none' : 'flex';
+      registerForm.setAttribute('aria-hidden', isLogin ? 'true' : 'false');
+      loginTab.classList.toggle('active', isLogin);
+      loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+      registerTab.classList.toggle('active', !isLogin);
+      registerTab.setAttribute('aria-selected', isLogin ? 'false' : 'true');
+    }
+
+    function selectRole(el) {
+      document.querySelectorAll('.role-option').forEach(r => r.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const pass  = document.getElementById('login-pass').value;
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAuthStatus(data.error || 'Login failed', 'error');
+          return;
+        }
+        OffGridAuth.setSession(data.token, data.user);
+        setAuthStatus('Signed in successfully. Redirecting...', 'success');
+        const roleDest = {
+          organizer: 'dashboard.html',
+          sponsor: 'sponsor_dashboard.html',
+          student: 'student_dashboard.html'
+        };
+        setTimeout(() => {
+          window.location.href = roleDest[data.user.role] || 'student_dashboard.html';
+        }, 300);
+      } catch (err) {
+        setAuthStatus('Unable to reach the login service.', 'error');
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const sel   = document.querySelector('.role-option.selected .role-option-label');
+      const role  = sel ? sel.textContent.trim().toLowerCase() : 'student';
+      const firstName = document.querySelector('#form-register input[type="text"]').value.trim() || 'New';
+      const lastName = document.querySelectorAll('#form-register input[type="text"]')[1].value.trim() || 'User';
+      const email = document.querySelector('#form-register input[type="email"]').value.trim().toLowerCase();
+      const password = document.querySelector('#form-register input[type="password"]').value;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: `${firstName} ${lastName}`.trim(),
+            email,
+            password,
+            role
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setAuthStatus(data.error || 'Registration failed', 'error');
+          return;
+        }
+        OffGridAuth.setSession(data.token, data.user);
+        setAuthStatus('Account created successfully. Redirecting...', 'success');
+        const roleDest = {
+          organizer: 'dashboard.html',
+          sponsor: 'sponsor_dashboard.html',
+          student: 'student_dashboard.html'
+        };
+        setTimeout(() => {
+          window.location.href = roleDest[data.user.role] || 'student_dashboard.html';
+        }, 300);
+      } catch (_) {
+        setAuthStatus('Unable to register right now.', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

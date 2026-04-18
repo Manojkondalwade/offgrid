@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Explore Events - OffGrid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0a0a0f; color: #e8e8f0; }
+    .glass-nav {
+      background: rgba(10, 10, 15, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .glass-card {
+      background: rgba(30, 30, 40, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.3s ease;
+    }
+    .glass-card:hover {
+      background: rgba(40, 40, 50, 0.6);
+      border-color: rgba(124, 106, 247, 0.4);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px 0 rgba(124, 106, 247, 0.15);
+    }
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #9999b3;
+      transition: all 0.2s ease;
+    }
+    .filter-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #e8e8f0;
+    }
+    .filter-chip.active {
+      background: rgba(124, 106, 247, 0.15);
+      border-color: rgba(124, 106, 247, 0.5);
+      color: #a89cf7;
+      box-shadow: 0 0 15px rgba(124, 106, 247, 0.2);
+    }
+    .explore-hero-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at center, rgba(124,106,247,0.15) 0%, rgba(10,10,15,0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .search-input-wrapper {
+      transition: all 0.3s ease;
+    }
+    .search-input-wrapper:focus-within {
+      border-color: #7c6af7;
+      box-shadow: 0 0 0 4px rgba(124,106,247,0.2);
+    }
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-accent-glow selection:text-accent-2">
+  <div class="grid-pattern"></div>
+
+  <!-- NAVBAR -->
+  <nav class="glass-nav sticky top-0 w-full z-50 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+        <span class="text-white">Off</span><span class="text-accent">Grid</span>
+      </a>
+      <ul class="hidden md:flex items-center gap-8">
+        <li><a href="student_dashboard.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Home</a></li>
+        <li><a href="feed.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Feed</a></li>
+        <li><a href="explore.html" class="text-accent-2 font-medium text-sm transition-colors flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-accent mt-0.5"></span>Explore</a></li>
+        <li><a href="my_events.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">My Events</a></li>
+        <li><a href="vote.html" class="text-text-2 hover:text-white font-medium text-sm transition-colors">Vote</a></li>
+      </ul>
+      <div class="flex items-center gap-4">
+        <div class="w-9 h-9 rounded-full bg-surface-2 border border-border flex items-center justify-center font-bold text-sm cursor-pointer hover:border-accent hover:text-accent transition-colors" onclick="window.location='student_profile.html'" title="Profile">
+          ST
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 relative z-10 w-full mb-16">
+    <!-- Explore Hero Banner -->
+    <div class="relative glass-card rounded-3xl p-10 md:p-16 text-center mb-10 overflow-hidden border border-white/10 shadow-2xl">
+      <div class="explore-hero-glow"></div>
+      <div class="relative z-10 max-w-2xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">Explore All Events</h1>
+        <p class="text-text-2 text-lg mb-10" id="heroSubtitle">Browse everything happening on campus.</p>
+        
+        <div class="search-input-wrapper flex items-center gap-3 bg-surface-2/80 backdrop-blur-xl border border-white/20 rounded-2xl px-6 py-4 w-full shadow-lg">
+          <svg class="text-accent w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search events, clubs, topics..." id="exploreSearch" oninput="filterTiles()" class="bg-transparent border-none outline-none text-white w-full text-lg placeholder-text-3 font-medium"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-wrap items-center justify-center gap-3 mb-10">
+      <button class="filter-chip active px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'all')">All Events</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'tech')">Tech</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'cultural')">Cultural</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'sports')">Sports</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'workshop')">Workshop</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'competition')">Competition</button>
+      <button class="filter-chip px-5 py-2.5 rounded-full text-sm font-semibold tracking-wide" onclick="setFilter(this, 'academic')">Academic</button>
+    </div>
+
+    <!-- Results Header -->
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+      <div class="text-sm font-bold uppercase tracking-widest text-text-3" id="resultsCount">Showing 0 events</div>
+      <a href="my_events.html" class="flex items-center gap-2 text-sm font-semibold text-accent hover:text-white transition-colors bg-accent/10 hover:bg-accent/20 px-4 py-2 rounded-lg border border-accent/20">
+        Open My Events <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </a>
+    </div>
+
+    <!-- Event Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="tilesGrid">
+      <!-- Populated by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="hidden py-24 text-center glass-card rounded-3xl" id="emptyState">
+      <div class="text-6xl mb-6 opacity-80">📭</div>
+      <h3 class="text-2xl font-bold text-white mb-2">No events found</h3>
+      <p class="text-text-2 text-lg">Try adjusting your search criteria or changing the selected filter.</p>
+      <button class="mt-8 px-6 py-3 rounded-full bg-surface-2 border border-white/10 text-white font-semibold hover:bg-white/5 transition-all" onclick="document.getElementById('exploreSearch').value=''; setFilter(document.querySelector('.filter-chip'), 'all'); filterTiles();">
+        Clear Filters
+      </button>
+    </div>
+  </main>
+
+  <script src="js/auth.js"></script>
+  <script>
+    let activeFilter = 'all';
+    let allEvents = [];
+    let registeredEventIds = new Set();
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    function buildTile(event) {
+      const tags = Array.isArray(event.tags) ? event.tags : [];
+      const user = OffGridAuth.getUser();
+      const canRegister = user && user.role === 'student';
+      const isRegistered = registeredEventIds.has(event.id);
+
+      const categoryColors = {
+        'tech': 'bg-accent/10 text-accent border-accent/20',
+        'cultural': 'bg-orange/10 text-orange border-orange/20',
+        'sports': 'bg-green/10 text-green border-green/20'
+      };
+      const catClass = categoryColors[event.category?.toLowerCase()] || 'bg-white/5 text-text-2 border-white/10';
+
+      return `
+        <article class="event-tile glass-card rounded-2xl overflow-hidden flex flex-col group h-full" data-tag="${escapeHtml(event.category || 'general')}" data-name="${escapeHtml(event.title)}">
+          
+          <div class="h-32 flex items-center justify-center text-5xl relative overflow-hidden bg-surface-2 border-b border-border transition-colors group-hover:bg-surface/80">
+            <div class="absolute inset-0 bg-gradient-to-br from-accent/5 to-green/5 pointer-events-none group-hover:opacity-100 opacity-50 transition-opacity"></div>
+            <span class="relative z-10 transform group-hover:scale-110 transition-transform duration-300">${escapeHtml(event.emoji || '📅')}</span>
+            <div class="absolute top-3 right-3">
+              <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md border backdrop-blur-md ${catClass}">
+                ${escapeHtml(event.category || 'Event')}
+              </span>
+            </div>
+          </div>
+          
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-lg font-bold text-white mb-2 leading-tight tracking-tight group-hover:text-accent transition-colors">${escapeHtml(event.title)}</h3>
+            
+            <div class="space-y-1.5 mb-4">
+              <div class="flex items-center gap-2 text-xs text-text-2 font-medium">
+                <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                ${escapeHtml(event.clubName || 'Campus Organizer')}
+              </div>
+              <div class="flex items-center gap-2 text-xs text-text-2 font-medium">
+                <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                ${escapeHtml(event.date || 'TBD')} at ${escapeHtml(event.time || 'TBD')}
+              </div>
+              <div class="flex items-center gap-2 text-xs text-text-2 font-medium">
+                <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span class="truncate">${escapeHtml(event.venue || 'Venue to be announced')}</span>
+              </div>
+            </div>
+            
+            <p class="text-sm text-text-3 line-clamp-2 mb-5 leading-relaxed flex-1">
+              ${escapeHtml(event.description || 'No description provided yet.')}
+            </p>
+            
+            <div class="flex flex-wrap gap-1.5 mb-6">
+              ${tags.length ? tags.slice(0,3).map((tag) => `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 text-text-2 border border-white/5 uppercase tracking-wider">${escapeHtml(tag)}</span>`).join('') : '<span class="text-xs text-text-3 italic">No tags</span>'}
+              ${tags.length > 3 ? `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-white/5 text-text-2 border border-white/5">+${tags.length-3}</span>` : ''}
+            </div>
+            
+            <div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+              <div class="flex items-center gap-1.5 flex-1">
+                <div class="flex -space-x-1.5">
+                  <div class="w-5 h-5 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[8px] text-text-2">1</div>
+                  <div class="w-5 h-5 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[8px] text-text-2">2</div>
+                </div>
+                <span class="text-[10px] text-text-3 font-semibold uppercase tracking-wider">${escapeHtml(String(event.registered || 0))}/${escapeHtml(String(event.capacity || 0))}</span>
+              </div>
+              
+              <div class="flex gap-2">
+                <a href="event_detail.html?id=${event.id}" class="px-3 py-1.5 rounded-md bg-surface text-text-2 text-xs font-bold hover:bg-surface-2 border border-white/5 transition-colors">Details</a>
+                ${canRegister
+                  ? (isRegistered
+                    ? '<button class="px-3 py-1.5 rounded-md bg-white/5 text-text-3 text-xs font-bold cursor-not-allowed border border-white/5" disabled>Registered</button>'
+                    : `<button class="px-3 py-1.5 rounded-md bg-accent text-white text-xs font-bold hover:bg-accent-2 transition-colors shadow-lg hover:shadow-accent/40" onclick="registerForEvent(${event.id})">Register</button>`)
+                  : '<a href="login.html" class="px-3 py-1.5 rounded-md bg-accent text-white text-xs font-bold hover:bg-accent-2 transition-colors shadow-lg hover:shadow-accent/40">Sign In</a>'}
+              </div>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function setFilter(el, tag) {
+      document.querySelectorAll('.filter-chip').forEach((chip) => chip.classList.remove('active'));
+      el.classList.add('active');
+      activeFilter = tag;
+      filterTiles();
+    }
+
+    function filterTiles() {
+      const query = document.getElementById('exploreSearch').value.toLowerCase();
+      let visible = 0;
+      document.querySelectorAll('.event-tile').forEach((tile) => {
+        const text = (tile.dataset.name + ' ' + tile.innerText).toLowerCase();
+        const matchesFilter = activeFilter === 'all' || tile.dataset.tag === activeFilter;
+        const matchesSearch = text.includes(query);
+        const show = matchesFilter && matchesSearch;
+        tile.style.display = show ? 'flex' : 'none';
+        if (show) visible += 1;
+      });
+      document.getElementById('resultsCount').textContent = `Showing ${visible} event${visible === 1 ? '' : 's'}`;
+      
+      const emptyState = document.getElementById('emptyState');
+      if (visible === 0) {
+        emptyState.classList.remove('hidden');
+        document.getElementById('tilesGrid').style.display = 'none';
+      } else {
+        emptyState.classList.add('hidden');
+        document.getElementById('tilesGrid').style.display = 'grid';
+      }
+    }
+
+    async function registerForEvent(eventId) {
+      if (!OffGridAuth.requireRole('student')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/student/registrations', {
+        method: 'POST',
+        body: JSON.stringify({ eventId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(payload.error || 'Could not register for this event.');
+        return;
+      }
+      alert(payload.message || 'Registered successfully!');
+      loadEvents();
+    }
+
+    async function loadEvents() {
+      try {
+        const user = OffGridAuth.getUser();
+        const requests = [fetch('/api/events')];
+        if (user && user.role === 'student' && OffGridAuth.getToken()) {
+          requests.push(OffGridAuth.authorizedFetch('/api/student/registrations'));
+        }
+
+        const responses = await Promise.all(requests);
+        if (!responses[0].ok) throw new Error('Unable to load events.');
+        allEvents = await responses[0].json();
+        registeredEventIds = new Set();
+        if (responses[1] && responses[1].ok) {
+          const registrations = await responses[1].json();
+          registeredEventIds = new Set(registrations.map((entry) => entry.event.id));
+        }
+        document.getElementById('heroSubtitle').textContent = allEvents.length
+          ? `${allEvents.length} published event${allEvents.length === 1 ? '' : 's'} are available for students.`
+          : 'No published events are available right now.';
+        document.getElementById('tilesGrid').innerHTML = allEvents.map(buildTile).join('');
+        filterTiles();
+      } catch (error) {
+        document.getElementById('heroSubtitle').textContent = error.message;
+        document.getElementById('tilesGrid').innerHTML = '';
+        filterTiles();
+      }
+    }
+
+    loadEvents();
+  </script>
+  <script src="js/app.js"></script>
+</body>
+</html>

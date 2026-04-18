@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sponsor Connect - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="event_manage.html">Events</a></li>
+      <li><a href="sponsors.html" class="active">Sponsors</a></li>
+      <li><a href="proposals.html">Proposals</a></li>
+      <li><a href="analytics.html">Analytics</a></li>
+      <li><a href="organizer_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <span class="badge badge-purple">Organizer</span>
+      <div class="avatar" onclick="window.location='organizer_profile.html'" style="cursor:pointer;" title="Profile">OG</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1 class="page-title">Sponsor Connect</h1>
+      <p class="page-subtitle text-muted" id="sponsorConnectSubtitle">Loading sponsor pipeline...</p>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Published Events Open to Sponsors</div>
+        <div id="sponsorEventList"><p class="text-dim">Loading your published events...</p></div>
+      </div>
+      <div class="card">
+        <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:12px;">Incoming Proposal Snapshot</div>
+        <div id="incomingProposalList"><p class="text-dim">Loading proposals...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function loadSponsorConnect() {
+      if (!OffGridAuth.requireRole('organizer')) return;
+      const [eventsRes, proposalsRes] = await Promise.all([
+        OffGridAuth.authorizedFetch('/api/organizer/events'),
+        OffGridAuth.authorizedFetch('/api/organizer/proposals')
+      ]);
+      if (!eventsRes.ok || !proposalsRes.ok) {
+        document.getElementById('sponsorConnectSubtitle').textContent = 'Unable to load sponsor pipeline right now.';
+        return;
+      }
+      const events = await eventsRes.json();
+      const proposals = await proposalsRes.json();
+      const liveEvents = events.filter((event) => ['published', 'poll_active'].includes(event.status));
+      document.getElementById('sponsorConnectSubtitle').textContent = `${liveEvents.length} live event${liveEvents.length === 1 ? '' : 's'} and ${proposals.length} sponsor proposal${proposals.length === 1 ? '' : 's'} in your pipeline.`;
+      document.getElementById('sponsorEventList').innerHTML = liveEvents.length
+        ? liveEvents.map((event) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(event.title)}<br/><span class="text-xs text-dim">${escapeHtml(event.status)} • ${escapeHtml(String(event.registered || 0))} registrations</span></div>`).join('')
+        : '<p class="text-dim">Publish an event to open it up for sponsorship conversations.</p>';
+      document.getElementById('incomingProposalList').innerHTML = proposals.length
+        ? proposals.map((proposal) => `<div style="padding:10px 0;border-bottom:1px solid var(--border);">${escapeHtml(proposal.sponsorName)} for ${escapeHtml(proposal.eventTitle)}<br/><span class="text-xs text-dim">${escapeHtml(proposal.amount || 'No amount')} • ${escapeHtml(proposal.status)}</span></div>`).join('')
+        : '<p class="text-dim">No incoming proposals yet. Sponsors will appear here once they respond to your live events.</p>';
+    }
+
+    loadSponsorConnect();
+  </script>
+</body>
+</html>

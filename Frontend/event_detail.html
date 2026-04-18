@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Detail - OffGrid</title>
+  <link rel="stylesheet" href="css/main.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="navbar-brand">Off<span class="brand-dot">Grid</span></a>
+    <ul class="navbar-links">
+      <li><a href="student_dashboard.html">Home</a></li>
+      <li><a href="feed.html">Feed</a></li>
+      <li><a href="explore.html">Explore</a></li>
+      <li><a href="my_events.html">My Events</a></li>
+      <li><a href="vote.html">Vote</a></li>
+      <li><a href="student_profile.html">Profile</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <div class="avatar" onclick="window.location='student_profile.html'" style="cursor:pointer;" title="Profile">ST</div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="margin-bottom:16px;">
+      <a href="explore.html" style="color:var(--text-3);text-decoration:none;font-size:0.85rem;">Back to Explore</a>
+    </div>
+    <div id="eventDetailCard" class="card">
+      <p class="text-dim">Loading event details...</p>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function registerForEvent(eventId) {
+      if (!OffGridAuth.requireRole('student')) return;
+      const response = await OffGridAuth.authorizedFetch('/api/student/registrations', {
+        method: 'POST',
+        body: JSON.stringify({ eventId })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast(payload.error || 'Could not register for this event.', 'error');
+        return;
+      }
+      showToast(payload.message || 'Registered successfully!', 'success');
+      loadEvent();
+    }
+
+    async function loadEvent() {
+      const eventId = getParam('id');
+      const detail = document.getElementById('eventDetailCard');
+      if (!eventId) {
+        detail.innerHTML = '<p class="text-dim">No event selected. Open an event from Explore or Feed.</p>';
+        return;
+      }
+
+      try {
+        const requests = [fetch(`/api/events/${eventId}`)];
+        const user = OffGridAuth.getUser();
+        if (user && user.role === 'student' && OffGridAuth.getToken()) {
+          requests.push(OffGridAuth.authorizedFetch('/api/student/registrations'));
+        }
+        const responses = await Promise.all(requests);
+        if (!responses[0].ok) throw new Error('Could not load the selected event.');
+        const event = await responses[0].json();
+        let isRegistered = false;
+        if (responses[1] && responses[1].ok) {
+          const registrations = await responses[1].json();
+          isRegistered = registrations.some((entry) => entry.event.id === Number(eventId));
+        }
+
+        detail.innerHTML = `
+          <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="width:72px;height:72px;border-radius:16px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:2rem;">${escapeHtml(event.emoji || '📅')}</div>
+            <div style="flex:1;min-width:260px;">
+              <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px;">${escapeHtml(event.title)}</div>
+              <div class="text-dim" style="line-height:1.7;">
+                ${escapeHtml(event.clubName || 'Campus Organizer')}<br/>
+                ${escapeHtml(event.date || 'TBD')} at ${escapeHtml(event.time || 'TBD')}<br/>
+                ${escapeHtml(event.venue || 'Venue pending')}<br/>
+                ${escapeHtml(String(event.registered || 0))}/${escapeHtml(String(event.capacity || 0))} joined
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              ${isRegistered
+                ? '<button class="btn btn-secondary" type="button" disabled>Registered</button>'
+                : '<button class="btn btn-primary" type="button" onclick="registerForEvent(' + event.id + ')">Register</button>'}
+              <a href="vote.html" class="btn btn-ghost">View Polls</a>
+            </div>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">About This Event</div>
+            <p class="text-dim">${escapeHtml(event.description || 'No description provided yet.')}</p>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Tags</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${(event.tags && event.tags.length ? event.tags : ['No tags yet']).map((tag) => `<span class="badge badge-blue">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+          </div>
+          ${event.poll ? `
+            <div style="margin-top:20px;">
+              <div style="font-family:var(--font-display);font-weight:700;color:var(--text);margin-bottom:10px;">Active Poll</div>
+              <p class="text-dim">${escapeHtml(event.poll.question || 'Vote on the best time slot for this event.')}</p>
+              <a href="vote.html" class="btn btn-ghost btn-sm" style="margin-top:10px;">Open Voting</a>
+            </div>
+          ` : ''}
+        `;
+      } catch (error) {
+        detail.innerHTML = `<p class="text-dim">${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    loadEvent();
+  </script>
+</body>
+</html>
